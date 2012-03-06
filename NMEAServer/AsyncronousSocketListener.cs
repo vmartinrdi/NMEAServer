@@ -10,18 +10,13 @@ namespace NMEAServer
 {
     public class AsyncronousSocketListener
     {
-        // private attributes which set the location at which the server listens
-        private static IPAddress _serverIP;
-        private static int _serverPortNumber;
+        private static IPAddress _serverIP = new IPAddress(new Byte[] { 127, 0, 0, 1 });
+        private static int _serverPortNumber = 10116;
 
-        // private attributes used to manage the threads on which each feed and client run
-        private List<Thread> _listOfFeeds = new List<Thread>();
-        private List<Thread> _listOfClients = new List<Thread>();
+        private static NMEAFeed feed = new NMEAFeed();
+        private static String localBuffer = "";
 
-        // listener thread
-        private Thread _listener;
-
-        // 
+        // _allDone is shared between all the threads to signal to the listener when to begin accepting new connections again
         private static ManualResetEvent _allDone = new ManualResetEvent(false);
 
         // default constructor
@@ -32,21 +27,10 @@ namespace NMEAServer
             _serverPortNumber = 10116;
         }
 
-        public AsyncronousSocketListener(IPAddress serverIP, int portNumber)
+        // main method
+        // call this method to start the server
+        public static void StartListening()
         {
-            _serverIP = serverIP;
-            _serverPortNumber = portNumber;
-        }
-
-        // public method which connects to feeds and kicks off the listening socket's thread
-        public void Initialize()
-        {
-            // connect to feeds
-
-            // start listening on a separate thread
-            _listener = new Thread(() => Listen());
-            _listener.Start();
-
             IPHostEntry ipHostInfo = new IPHostEntry();
             ipHostInfo.AddressList = new IPAddress[] { _serverIP };
             IPAddress ipAddress = ipHostInfo.AddressList[0];
@@ -54,44 +38,22 @@ namespace NMEAServer
             // Create a TCP/IP socket.
             Socket listener = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);
-        }
 
-        //// public method which begins the main execution loop
-        //public void Start()
-        //{
-        //    while (true)
-        //    {
-        //            // foreach feed
-        //                // feed.ReceiveDone.WaitOne(); // wait for the current receive cycle to finish
+            // client threads
+            List<Thread> listOfThreads = new List<Thread>();
 
-        //                // feed.SendDone.Reset(); // tell the feed to pause
+            //List<NMEAFeed> listOfFeeds = new List<NMEAFeed>();
+            Thread feedThread = new Thread(() => feed.StartListening());
+            feedThread.Start();
 
-        //                // string feedData = feed.FeedData.ToString(); // grab the data from the feed
-        //                // feed.FeedData.Clear(); // reset the feed data's string
+            Thread transferBufferThread = new Thread(() => CheckFeedBuffer());
+            transferBufferThread.Start();
 
-        //                // feed.SendDone.Set(); // tell the feed it can continue
-
-
-
-        //            // pause the loop for half a second
-        //            System.Threading.Thread.Sleep(500);
-        //    }
-        //}
-
-        public void Listen()
-        {
-            IPHostEntry ipHostInfo = new IPHostEntry();
-            ipHostInfo.AddressList = new IPAddress[] { _serverIP };
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, _serverPortNumber);
-            // Create a TCP/IP socket.
-            Socket listeningSocket = new Socket(AddressFamily.InterNetwork,
-                SocketType.Stream, ProtocolType.Tcp);
-
+            // start the listener socket
             try
             {
-                listeningSocket.Bind(localEndPoint);
-                listeningSocket.Listen(100);
+                listener.Bind(localEndPoint);
+                listener.Listen(100);
 
                 while (true)
                 {
@@ -99,20 +61,32 @@ namespace NMEAServer
 
                     // BeginAccept in loop - wrap in thread (should these threads be foreground or background threads?)
                     Thread newThread = new Thread(() =>
-                                            listeningSocket.BeginAccept(new AsyncCallback(ServerAcceptCallback), listeningSocket));
+                                            listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), listener));
                     newThread.Start();
-
-                    lock (_listOfClients)
-                    {
-                        _listOfClients.Add(newThread);
-                    }
+                    listOfThreads.Add(newThread);
+                    //listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), listener);
 
                     _allDone.WaitOne();
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error: " + e.ToString());
+                Console.WriteLine("ERROR: " + e.ToString());
+            }
+        }
+
+        private static void CheckFeedBuffer()
+        {
+            while (true)
+            {
+                lock (feed.sb)
+                {
+                    localBuffer = feed.sb.ToString();
+
+                    feed.sb.Clear();
+                }
+
+                Thread.Sleep(5000); // sleep for five seconds
             }
         }
 
@@ -180,11 +154,11 @@ namespace NMEAServer
             Socket handler = client.ClientSocket;
 
             byte[] data = null;
-            lock (feed.sb)
-            {
-                data = Encoding.ASCII.GetBytes(feed.sb.ToString());
-                feed.sb.Clear();
-            }
+            //lock (feed.sb)
+            //{
+            //    data = Encoding.ASCII.GetBytes(feed.sb.ToString());
+            //}
+            data = Encoding.ASCII.GetBytes(localBuffer);
 
             if (data != null)
                 handler.BeginSend(data, 0, data.Length, 0, new AsyncCallback(ServerSendCallback), client);

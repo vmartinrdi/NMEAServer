@@ -10,95 +10,57 @@ namespace NMEAServer
 {
     public class NMEAFeed
     {
-        // private attributes to tell this object to what location it should try connecting
-        private int _port;
-        private IPAddress _serverIP;
+        // feed socket.
+        public Socket workSocket = null;
+        // Size of receive buffer.
+        public const int BufferSize = 1024;
+        // Receive buffer.
+        public byte[] buffer = new byte[BufferSize];
+        // Received data string.
+        public StringBuilder sb = new StringBuilder();
 
-        // public attributes used to manage resources shared between threads
-        public ManualResetEvent ConnectDone = new ManualResetEvent(false); // used internally
-        public ManualResetEvent ReceiveDone = new ManualResetEvent(false); // used internally
-        public ManualResetEvent SendDone = new ManualResetEvent(false); // SendDone is used by external threads to indicate that FeedData is being shared and should be reset and set by those threads
+        private const int port = 10090; // 11035;
+        private static IPAddress _serverIP = new IPAddress(new Byte[] { 216, 67, 61, 34 });
 
-        // public attribute for sharing data read from the feed
-        public StringBuilder FeedData = new StringBuilder();
+        public ManualResetEvent connectDone = new ManualResetEvent(false);
+        public ManualResetEvent receiveDone = new ManualResetEvent(false);
+        public ManualResetEvent sendDone = new ManualResetEvent(false);
 
-        // private attribute that manages the actual connection
-        private StateObject _stateObject;
+        public StringBuilder feedData = new StringBuilder();
 
-        // public method to start the process for which this class is responsible
-        public void Start()
+        public void StartListening()
         {
-            InitializeConnection();
-            ConnectDone.WaitOne();
+            byte[] bytes = new Byte[BufferSize];
 
-            while (_stateObject.workSocket.Connected)
-            {
-                try
-                {
-                    // receive data
-                    ReceiveDone.Reset();
-                    Receive(_stateObject.workSocket);
-                    ReceiveDone.WaitOne();
+            IPHostEntry ipHostInfo = new IPHostEntry();
+            ipHostInfo.AddressList = new IPAddress[] { _serverIP };
+            IPAddress ipAddress = ipHostInfo.AddressList[0];
+            IPEndPoint remoteEndPoint = new IPEndPoint(ipAddress, port);
+            // Create a TCP/IP socket.
+            Socket listener = new Socket(AddressFamily.InterNetwork,
+                SocketType.Stream, ProtocolType.Tcp);
 
-                }
-                catch (Exception e)
-                {
-                    HandleError(e);
-                }
-            }
-
-            _stateObject.workSocket.Close();
-        }
-
-        // private method to initialize the connection with the feed
-        private void InitializeConnection()
-        {
             try
             {
-                ConnectDone.Reset();
+                listener.BeginConnect(remoteEndPoint, new AsyncCallback(ConnectCallback), listener);
+                connectDone.WaitOne();
 
-                IPHostEntry ipHostInfo = new IPHostEntry();
-                ipHostInfo.AddressList = new IPAddress[] { _serverIP };
-                IPAddress ipAddress = ipHostInfo.AddressList[0];
-                IPEndPoint remoteEndPoint = new IPEndPoint(ipAddress, _port);
-                // Create a TCP/IP socket.
-                _stateObject.workSocket = new Socket(AddressFamily.InterNetwork,
-                    SocketType.Stream, ProtocolType.Tcp);
+                // receive data
+                receiveDone.Reset();
+                Receive(listener);
+                receiveDone.WaitOne();
 
-                _stateObject.workSocket.BeginConnect(remoteEndPoint, new AsyncCallback(ConnectCallback), _stateObject.workSocket);
+                Console.WriteLine("Disconnecting from feed");
 
-                ConnectDone.Set();
+                listener.Shutdown(SocketShutdown.Both);
+                listener.Close();
             }
             catch (Exception e)
             {
-                HandleError(e);
+                Console.WriteLine("Feed Error " + e.ToString());
             }
         }
 
-        private void HandleError(Exception e)
-        {
-            // assume that an exception has compromised the socket connection and close it
-            _stateObject.workSocket.Close();
-
-            HandleError(e.Message);
-        }
-
-        private void HandleError(string e)
-        {
-            // make sure nothing else is done while we're resetting the connection
-            ConnectDone.Reset();
-
-            // write e to log
-            Console.WriteLine("Feed Error: " + e);
-
-            // sleep for a bit
-            System.Threading.Thread.Sleep(500);
-
-            // initialize the connection
-            InitializeConnection();
-        }
-
-        // private method which completes the connection to the remote endpoint
         private void ConnectCallback(IAsyncResult ar)
         {
             try
@@ -113,7 +75,7 @@ namespace NMEAServer
                     client.RemoteEndPoint.ToString());
 
                 // Signal that the connection has been made.
-                ConnectDone.Set();
+                connectDone.Set();
             }
             catch (Exception e)
             {
@@ -121,7 +83,6 @@ namespace NMEAServer
             }
         }
 
-        // private method to receive data from the remote endpoint
         private void Receive(Socket client)
         {
             try
@@ -130,8 +91,11 @@ namespace NMEAServer
                 StateObject state = new StateObject();
                 state.workSocket = client;
 
+                // before beginning to receive again, check sendDone
+                //sendDone.WaitOne();
+
                 // Begin receiving the data from the remote device.
-                client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                client.BeginReceive(state.buffer, 0, BufferSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
             }
             catch (Exception e)
@@ -140,7 +104,6 @@ namespace NMEAServer
             }
         }
 
-        // private method to complete the data receive event
         private void ReceiveCallback(IAsyncResult ar)
         {
             try
@@ -155,24 +118,15 @@ namespace NMEAServer
 
                 if (bytesRead > 0)
                 {
-                    // There might be more data, so store the data received so far.
-                    state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                    //// There might be more data, so store the data received so far.
+                    lock (sb)
+                    {
+                        sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                    }
                     Console.WriteLine("Received: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
-                    // transfer data to publically accessible property once it's large enough
-                    if (state.sb.Length > 4096)
-                    {
-                        lock (FeedData)
-                        {
-                            FeedData = state.sb;
-                            state.sb.Clear();
-                        }
-                    }
-
-                    // the StringBuilder FeedData is a shared resource and might need to be accessed by outside threads to be sent to clients
-                    // so WaitOne on SendDone
-                    SendDone.WaitOne();
-                    client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    // Get the rest of the data.
+                    client.BeginReceive(state.buffer, 0, BufferSize, 0,
                         new AsyncCallback(ReceiveCallback), state);
                 }
                 else
@@ -184,7 +138,7 @@ namespace NMEAServer
                         Console.WriteLine("Received: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
                     }
                     // Signal that all bytes have been received.
-                    ReceiveDone.Set();
+                    receiveDone.Set();
                 }
             }
             catch (Exception e)

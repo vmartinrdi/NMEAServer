@@ -12,6 +12,6 @@ namespace NMEAServer
         static void Main(string[] args)
         {
             AsyncronousSocketListener.StartListening();
-        }   
+        }
     }
 }
