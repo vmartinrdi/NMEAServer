@@ -19,14 +19,31 @@ namespace NMEAServer
         // Received data string.
         public StringBuilder sb = new StringBuilder();
 
-        private const int port = 10090; // 11035;
-        private static IPAddress _serverIP = new IPAddress(new Byte[] { 216, 67, 61, 34 });
+        private int port;
+        private IPAddress _serverIP;
 
         public ManualResetEvent connectDone = new ManualResetEvent(false);
         public ManualResetEvent receiveDone = new ManualResetEvent(false);
         public ManualResetEvent sendDone = new ManualResetEvent(false);
 
         public StringBuilder feedData = new StringBuilder();
+
+        //private Thread _thread;
+
+        //public NMEAFeed(IPAddress ip, int portNumber)
+        //{
+        //    _serverIP = ip;
+        //    port = portNumber;
+
+        //    _thread = new Thread(() => StartListening());
+        //    _thread.Start();
+        //}
+
+        public NMEAFeed(IPAddress ip, int portnumber)
+        {
+            port = portnumber;
+            _serverIP = ip;
+        }
 
         public void StartListening()
         {
@@ -123,7 +140,7 @@ namespace NMEAServer
                     {
                         sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
                     }
-                    Console.WriteLine("Received: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                    //Console.WriteLine("Received: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
                     // Get the rest of the data.
                     client.BeginReceive(state.buffer, 0, BufferSize, 0,
@@ -135,7 +152,7 @@ namespace NMEAServer
                     if (state.sb.Length > 1)
                     {
                         //response = state.sb.ToString();
-                        Console.WriteLine("Received: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                        //Console.WriteLine("Received: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
                     }
                     // Signal that all bytes have been received.
                     receiveDone.Set();
