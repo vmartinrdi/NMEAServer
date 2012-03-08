@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -16,21 +17,17 @@ namespace NMEAServer
         public ManualResetEvent receiveDone = new ManualResetEvent(false);
 
         public Socket ClientSocket = null;
-        public string ClientID = "";
+        public string DeviceID = "";
+        public int ClientID = 0;
         public const int BufferSize = 1024;
         public byte[] buffer = new byte[BufferSize];
         public StringBuilder sb = new StringBuilder();
-
+        private MarineExchangeEntities m_MarineExchangeDB;
 
         // new properties
         private Thread _thread;
         public string LocalBuffer = string.Empty;
-
-        // default constructor
-        public AsynchronousClient()
-        {
-
-        }
+        public int[] FeedSubscriptions;
 
         // accepts an open socket created from the listener
         public AsynchronousClient(Socket socket)
@@ -43,16 +40,58 @@ namespace NMEAServer
 
         public void Start()
         {
-            this.sendDone.Reset();
-            
-            // call client's method to BeginReceive
-            this.ClientSocket.BeginReceive(this.buffer, 0, 1024, 0, new AsyncCallback(ServerReceiveCallback), this);
-            this.sendDone.WaitOne();
+            // clients are authenticated either by IP or by iDevice ID
+            // if by IP, the client just listens, and never sends any data
+            // so check if IP is authorized first (there are problems with this - authorizing a single IP may authorize more users than anticipated. MXAK is aware of this)
+            bool isAuthorized = false;
+
+            IPAddress remoteIP;
+            if (IPAddress.TryParse(((IPEndPoint)this.ClientSocket.RemoteEndPoint).Address.ToString(), out remoteIP))
+            {
+                // query the database for a client who has authorized this IP address
+                System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByIP(remoteIP.ToString());
+
+                if (hasClient != null)
+                {
+                    if (hasClient.Count() > 0)
+                    {
+                        if (hasClient.First().Value != null)
+                        {
+                            isAuthorized = true;
+                            ClientID = hasClient.First().Value;
+                            DeviceID = "";
+                        }
+                    }
+                }
+            }
+
+            if (!isAuthorized)
+            {
+                this.sendDone.Reset();
+
+                // call client's method to BeginReceive
+                this.ClientSocket.BeginReceive(this.buffer, 0, 1024, 0, new AsyncCallback(ServerReceiveCallback), this);
+                this.sendDone.WaitOne();
+            }
 
             // once the client has identified itself, begin sending data
-            while (this.ClientSocket.Connected)
+            if (ClientID > 0)
             {
-                ServerSend(this);
+                // check client's subscriptions
+                System.Data.Objects.ObjectResult<CheckUser_Result> clientSubscriptions = m_MarineExchangeDB.FetchClientSubscriptions(ClientID);
+
+                if (clientSubscriptions != null)
+                {
+                    if (clientSubscriptions.Count() > 0)
+                    {
+
+                    }
+                }
+
+                while (this.ClientSocket.Connected)
+                {
+                    ServerSend(this);
+                }
             }
         }
 
@@ -77,7 +116,21 @@ namespace NMEAServer
                 client.sb.Append(Encoding.ASCII.GetString(client.buffer, 0, bytesRead));
 
                 Console.WriteLine("Client with identifier '" + client.sb.ToString() + "' connected");
-                client.ClientID = client.sb.ToString();
+                client.DeviceID = client.sb.ToString();
+
+                System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByDevice(client.DeviceID);
+                if (hasClient != null)
+                {
+                    if (hasClient.Count() > 0)
+                    {
+                        if (hasClient.First().Value != null)
+                        {
+                            ClientID = hasClient.First().Value;
+                            DeviceID = client.DeviceID;
+                        }
+                    }
+                }
+
                 client.sendDone.Set();
             }
         }

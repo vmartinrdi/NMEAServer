@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="MarineExchangeModelStoreContainer" CdmEntityContainer="MarineExchangeEntities">
+    <EntitySetMapping Name="DBActivityLogs">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBActivityLog">
+        <MappingFragment StoreEntitySet="Activity_Log">
+          <ScalarProperty Name="activity_log_id" ColumnName="activity_log_id" />
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="activity_datetime" ColumnName="activity_datetime" />
+          <ScalarProperty Name="accessed_by_ip_address" ColumnName="accessed_by_ip_address" />
+          <ScalarProperty Name="connection_start_datetime" ColumnName="connection_start_datetime" />
+          <ScalarProperty Name="connection_last_datetime" ColumnName="connection_last_datetime" />
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBClients">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBClient">
+        <MappingFragment StoreEntitySet="Client">
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+          <ScalarProperty Name="contact_name_first" ColumnName="contact_name_first" />
+          <ScalarProperty Name="contact_name_last" ColumnName="contact_name_last" />
+          <ScalarProperty Name="company_name" ColumnName="company_name" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBClientAddresses">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBClientAddresses">
+        <MappingFragment StoreEntitySet="Client_Addresses">
+          <ScalarProperty Name="client_address_id" ColumnName="client_address_id" />
+          <ScalarProperty Name="billing_or_mailing_address" ColumnName="billing_or_mailing_address" />
+          <ScalarProperty Name="street1" ColumnName="street1" />
+          <ScalarProperty Name="street2" ColumnName="street2" />
+          <ScalarProperty Name="city" ColumnName="city" />
+          <ScalarProperty Name="state_code" ColumnName="state_code" />
+          <ScalarProperty Name="zip_code" ColumnName="zip_code" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBClientAuthentications">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBClientAuthentication">
+        <MappingFragment StoreEntitySet="Client_Authentication">
+          <ScalarProperty Name="device_id" ColumnName="device_id" />
+          <ScalarProperty Name="device_type" ColumnName="device_type" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+          <ScalarProperty Name="authentication_id" ColumnName="authentication_id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBCurrentConnections">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBCurrentConnection">
+        <MappingFragment StoreEntitySet="Current_Connection">
+          <ScalarProperty Name="connection_Id" ColumnName="connection_Id" />
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="connection_ip_address" ColumnName="connection_ip_address" />
+          <ScalarProperty Name="connection_start_datetime" ColumnName="connection_start_datetime" />
+          <ScalarProperty Name="connection_last_datetime" ColumnName="connection_last_datetime" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBDeviceTypes">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBDeviceType">
+        <MappingFragment StoreEntitySet="Device_Type">
+          <ScalarProperty Name="device_type1" ColumnName="device_type" />
+          <ScalarProperty Name="device_description" ColumnName="device_description" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBErrorLogs">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBErrorLog">
+        <MappingFragment StoreEntitySet="Error_Log">
+          <ScalarProperty Name="error_log_id" ColumnName="error_log_id" />
+          <ScalarProperty Name="error_description" ColumnName="error_description" />
+          <ScalarProperty Name="stack_trace" ColumnName="stack_trace" />
+          <ScalarProperty Name="error_thrown_from" ColumnName="error_thrown_from" />
+          <ScalarProperty Name="inner_exception" ColumnName="inner_exception" />
+          <ScalarProperty Name="target_site" ColumnName="target_site" />
+          <ScalarProperty Name="error_datetime" ColumnName="error_datetime" />
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBNMEAFeeds">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBNMEAFeeds">
+        <MappingFragment StoreEntitySet="NMEA_Feeds">
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="feed_name" ColumnName="feed_name" />
+          <ScalarProperty Name="feed_description" ColumnName="feed_description" />
+          <ScalarProperty Name="subscription_price" ColumnName="subscription_price" />
+          <ScalarProperty Name="ip_address" ColumnName="ip_address" />
+          <ScalarProperty Name="server_port_number" ColumnName="server_port_number" />
+          <ScalarProperty Name="northwest_coordinates" ColumnName="northwest_coordinates" />
+          <ScalarProperty Name="northeast_coordinates" ColumnName="northeast_coordinates" />
+          <ScalarProperty Name="southwest_coordinates" ColumnName="southwest_coordinates" />
+          <ScalarProperty Name="southeast_coordinates" ColumnName="southeast_coordinates" />
+          <ScalarProperty Name="isActive" ColumnName="isActive" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="DBSubscriptions">
+      <EntityTypeMapping TypeName="MarineExchangeModel.DBSubscription">
+        <MappingFragment StoreEntitySet="Subscription">
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+          <ScalarProperty Name="maximum_allowable_connections" ColumnName="maximum_allowable_connections" />
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="active" ColumnName="active" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <FunctionImportMapping FunctionImportName="CheckUser" FunctionName="MarineExchangeModel.Store.CheckUser">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="MarineExchangeModel.CheckUser_Result">
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+          <ScalarProperty Name="maximum_allowable_connections" ColumnName="maximum_allowable_connections" />
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="active" ColumnName="active" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="CheckUserByIP" FunctionName="MarineExchangeModel.Store.CheckUserByIP" />
+    <FunctionImportMapping FunctionImportName="GetNMEAFeeds" FunctionName="MarineExchangeModel.Store.GetNMEAFeeds" />
+    <FunctionImportMapping FunctionImportName="GetSubscriptions" FunctionName="MarineExchangeModel.Store.GetSubscriptions">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="MarineExchangeModel.GetSubscriptions_Result">
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="feed_name" ColumnName="feed_name" />
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="feed_description" ColumnName="feed_description" />
+          <ScalarProperty Name="subscription_price" ColumnName="subscription_price" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="HasSubscription" FunctionName="MarineExchangeModel.Store.HasSubscription" />
+    <FunctionImportMapping FunctionImportName="LogActivity" FunctionName="MarineExchangeModel.Store.LogActivity" />
+    <FunctionImportMapping FunctionImportName="LogError" FunctionName="MarineExchangeModel.Store.LogError" />
+  </EntityContainerMapping>
+</Mapping>

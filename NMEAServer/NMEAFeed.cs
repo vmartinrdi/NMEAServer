@@ -21,6 +21,7 @@ namespace NMEAServer
 
         private int port;
         private IPAddress _serverIP;
+        public int FeedID { get; set; }
 
         public ManualResetEvent connectDone = new ManualResetEvent(false);
         public ManualResetEvent receiveDone = new ManualResetEvent(false);
@@ -39,10 +40,11 @@ namespace NMEAServer
         //    _thread.Start();
         //}
 
-        public NMEAFeed(IPAddress ip, int portnumber)
+        public NMEAFeed(IPAddress ip, int portnumber, int feedID)
         {
             port = portnumber;
             _serverIP = ip;
+            FeedID = feedID;
         }
 
         public void StartListening()

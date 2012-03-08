@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="MarineExchangeModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+  <EntityContainer Name="MarineExchangeEntities" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="DBActivityLogs" EntityType="MarineExchangeModel.DBActivityLog" />
+    <EntitySet Name="DBClients" EntityType="MarineExchangeModel.DBClient" />
+    <EntitySet Name="DBClientAddresses" EntityType="MarineExchangeModel.DBClientAddresses" />
+    <EntitySet Name="DBClientAuthentications" EntityType="MarineExchangeModel.DBClientAuthentication" />
+    <EntitySet Name="DBCurrentConnections" EntityType="MarineExchangeModel.DBCurrentConnection" />
+    <EntitySet Name="DBDeviceTypes" EntityType="MarineExchangeModel.DBDeviceType" />
+    <EntitySet Name="DBErrorLogs" EntityType="MarineExchangeModel.DBErrorLog" />
+    <EntitySet Name="DBNMEAFeeds" EntityType="MarineExchangeModel.DBNMEAFeeds" />
+    <EntitySet Name="DBSubscriptions" EntityType="MarineExchangeModel.DBSubscription" />
+    <AssociationSet Name="FK_Client_Addresses_Client" Association="MarineExchangeModel.FK_Client_Addresses_Client">
+      <End Role="Client" EntitySet="DBClients" />
+      <End Role="Client_Addresses" EntitySet="DBClientAddresses" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Client_Authentication_Client" Association="MarineExchangeModel.FK_Client_Authentication_Client">
+      <End Role="Client" EntitySet="DBClients" />
+      <End Role="Client_Authentication" EntitySet="DBClientAuthentications" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Subscription_Client" Association="MarineExchangeModel.FK_Subscription_Client">
+      <End Role="Client" EntitySet="DBClients" />
+      <End Role="Subscription" EntitySet="DBSubscriptions" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Current_Connection_Subscription" Association="MarineExchangeModel.FK_Current_Connection_Subscription">
+      <End Role="Subscription" EntitySet="DBSubscriptions" />
+      <End Role="Current_Connection" EntitySet="DBCurrentConnections" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Subscription_NMEA_Feeds" Association="MarineExchangeModel.FK_Subscription_NMEA_Feeds">
+      <End Role="NMEA_Feeds" EntitySet="DBNMEAFeeds" />
+      <End Role="Subscription" EntitySet="DBSubscriptions" />
+    </AssociationSet>
+    <FunctionImport Name="CheckUser" ReturnType="Collection(MarineExchangeModel.CheckUser_Result)">
+      <Parameter Name="ItemID" Mode="In" Type="String" />
+      <Parameter Name="IPAddress" Mode="In" Type="String" />
+      <Parameter Name="clientID" Mode="In" Type="Int32" />
+    </FunctionImport>
+    <FunctionImport Name="CheckUserByIP" ReturnType="Collection(Int32)">
+      <Parameter Name="IPAddress" Mode="In" Type="String" />
+    </FunctionImport>
+    <FunctionImport Name="GetNMEAFeeds" EntitySet="DBNMEAFeeds" ReturnType="Collection(MarineExchangeModel.DBNMEAFeeds)" />
+    <FunctionImport Name="GetSubscriptions" ReturnType="Collection(MarineExchangeModel.GetSubscriptions_Result)">
+      <Parameter Name="client_id" Mode="In" Type="Int32" />
+    </FunctionImport>
+    <FunctionImport Name="HasSubscription" ReturnType="Collection(Int32)">
+      <Parameter Name="clientID" Mode="In" Type="Int32" />
+      <Parameter Name="feedID" Mode="In" Type="Int32" />
+    </FunctionImport>
+    <FunctionImport Name="LogActivity" ReturnType="Collection(Decimal)">
+      <Parameter Name="subscription_id" Mode="In" Type="Int32" />
+      <Parameter Name="ip_address" Mode="In" Type="String" />
+      <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
+      <Parameter Name="client_id" Mode="In" Type="Int32" />
+    </FunctionImport>
+    <FunctionImport Name="LogError">
+      <Parameter Name="error_description" Mode="In" Type="String" />
+      <Parameter Name="stack_trace" Mode="In" Type="String" />
+      <Parameter Name="error_thrown_from" Mode="In" Type="String" />
+      <Parameter Name="inner_exception" Mode="In" Type="String" />
+      <Parameter Name="target_site" Mode="In" Type="String" />
+      <Parameter Name="error_datetime" Mode="In" Type="DateTime" />
+      <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
+      <Parameter Name="device_id" Mode="In" Type="String" />
+    </FunctionImport>
+  </EntityContainer>
+  <EntityType Name="DBActivityLog">
+    <Key>
+      <PropertyRef Name="activity_log_id" />
+    </Key>
+    <Property Name="activity_log_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="subscription_id" Type="Int32" />
+    <Property Name="activity_datetime" Type="DateTime" Nullable="false" />
+    <Property Name="accessed_by_ip_address" Type="String" Nullable="false" MaxLength="15" Unicode="false" FixedLength="false" />
+    <Property Name="connection_start_datetime" Type="DateTime" Nullable="false" />
+    <Property Name="connection_last_datetime" Type="DateTime" Nullable="false" />
+    <Property Name="nmea_feed_id" Type="Int32" />
+    <Property Name="client_id" Type="Int32" />
+  </EntityType>
+  <EntityType Name="DBClient">
+    <Key>
+      <PropertyRef Name="client_id" />
+    </Key>
+    <Property Name="client_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="contact_name_first" Type="String" Nullable="false" MaxLength="250" Unicode="false" FixedLength="false" />
+    <Property Name="contact_name_last" Type="String" Nullable="false" MaxLength="250" Unicode="false" FixedLength="false" />
+    <Property Name="company_name" Type="String" MaxLength="250" Unicode="false" FixedLength="false" />
+    <NavigationProperty Name="Client_Addresses" Relationship="MarineExchangeModel.FK_Client_Addresses_Client" FromRole="Client" ToRole="Client_Addresses" />
+    <NavigationProperty Name="Client_Authentication" Relationship="MarineExchangeModel.FK_Client_Authentication_Client" FromRole="Client" ToRole="Client_Authentication" />
+    <NavigationProperty Name="Subscriptions" Relationship="MarineExchangeModel.FK_Subscription_Client" FromRole="Client" ToRole="Subscription" />
+  </EntityType>
+  <EntityType Name="DBClientAddresses">
+    <Key>
+      <PropertyRef Name="client_address_id" />
+    </Key>
+    <Property Name="client_address_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="billing_or_mailing_address" Type="String" Nullable="false" MaxLength="250" Unicode="false" FixedLength="false" />
+    <Property Name="street1" Type="String" Nullable="false" MaxLength="250" Unicode="false" FixedLength="false" />
+    <Property Name="street2" Type="String" Nullable="false" MaxLength="250" Unicode="false" FixedLength="false" />
+    <Property Name="city" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+    <Property Name="state_code" Type="String" Nullable="false" MaxLength="2" Unicode="false" FixedLength="false" />
+    <Property Name="zip_code" Type="String" Nullable="false" MaxLength="13" Unicode="false" FixedLength="false" />
+    <Property Name="client_id" Type="Int32" Nullable="false" />
+    <NavigationProperty Name="Client" Relationship="MarineExchangeModel.FK_Client_Addresses_Client" FromRole="Client_Addresses" ToRole="Client" />
+  </EntityType>
+  <EntityType Name="DBClientAuthentication">
+    <Key>
+      <PropertyRef Name="authentication_id" />
+    </Key>
+    <Property Name="device_id" Type="String" Nullable="false" MaxLength="40" Unicode="false" FixedLength="false" />
+    <Property Name="device_type" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="client_id" Type="Int32" Nullable="false" />
+    <Property Name="authentication_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <NavigationProperty Name="Client" Relationship="MarineExchangeModel.FK_Client_Authentication_Client" FromRole="Client_Authentication" ToRole="Client" />
+  </EntityType>
+  <EntityType Name="DBCurrentConnection">
+    <Key>
+      <PropertyRef Name="connection_Id" />
+    </Key>
+    <Property Name="connection_Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="subscription_id" Type="Int32" Nullable="false" />
+    <Property Name="connection_ip_address" Type="String" Nullable="false" MaxLength="15" Unicode="false" FixedLength="false" />
+    <Property Name="connection_start_datetime" Type="DateTime" Nullable="false" />
+    <Property Name="connection_last_datetime" Type="DateTime" Nullable="false" />
+    <NavigationProperty Name="Subscription" Relationship="MarineExchangeModel.FK_Current_Connection_Subscription" FromRole="Current_Connection" ToRole="Subscription" />
+  </EntityType>
+  <EntityType Name="DBDeviceType">
+    <Key>
+      <PropertyRef Name="device_type1" />
+    </Key>
+    <Property Name="device_type1" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="device_description" Type="String" Nullable="false" MaxLength="100" Unicode="false" FixedLength="false" />
+  </EntityType>
+  <EntityType Name="DBErrorLog">
+    <Key>
+      <PropertyRef Name="error_log_id" />
+    </Key>
+    <Property Name="error_log_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="error_description" Type="String" Nullable="false" MaxLength="1000" Unicode="false" FixedLength="false" />
+    <Property Name="stack_trace" Type="String" MaxLength="1000" Unicode="false" FixedLength="false" />
+    <Property Name="error_thrown_from" Type="String" MaxLength="1000" Unicode="false" FixedLength="false" />
+    <Property Name="inner_exception" Type="String" MaxLength="1000" Unicode="false" FixedLength="false" />
+    <Property Name="target_site" Type="String" MaxLength="1000" Unicode="false" FixedLength="false" />
+    <Property Name="error_datetime" Type="DateTime" Nullable="false" />
+    <Property Name="nmea_feed_id" Type="Int32" />
+    <Property Name="subscription_id" Type="Int32" />
+    <Property Name="client_id" Type="Int32" />
+  </EntityType>
+  <EntityType Name="DBNMEAFeeds">
+    <Key>
+      <PropertyRef Name="nmea_feed_id" />
+    </Key>
+    <Property Name="nmea_feed_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="feed_name" Type="String" Nullable="false" MaxLength="250" Unicode="false" FixedLength="false" />
+    <Property Name="feed_description" Type="String" Nullable="false" MaxLength="1000" Unicode="false" FixedLength="false" />
+    <Property Name="subscription_price" Type="Decimal" Nullable="false" Precision="19" Scale="4" />
+    <Property Name="ip_address" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="server_port_number" Type="Int32" Nullable="false" />
+    <Property Name="northwest_coordinates" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="northeast_coordinates" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="southwest_coordinates" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="southeast_coordinates" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+    <Property Name="isActive" Type="Boolean" />
+    <NavigationProperty Name="Subscriptions" Relationship="MarineExchangeModel.FK_Subscription_NMEA_Feeds" FromRole="NMEA_Feeds" ToRole="Subscription" />
+  </EntityType>
+  <EntityType Name="DBSubscription">
+    <Key>
+      <PropertyRef Name="subscription_id" />
+    </Key>
+    <Property Name="subscription_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="client_id" Type="Int32" Nullable="false" />
+    <Property Name="maximum_allowable_connections" Type="Int32" Nullable="false" />
+    <Property Name="nmea_feed_id" Type="Int32" Nullable="false" />
+    <Property Name="active" Type="Boolean" Nullable="false" />
+    <NavigationProperty Name="Client" Relationship="MarineExchangeModel.FK_Subscription_Client" FromRole="Subscription" ToRole="Client" />
+    <NavigationProperty Name="Current_Connection" Relationship="MarineExchangeModel.FK_Current_Connection_Subscription" FromRole="Subscription" ToRole="Current_Connection" />
+    <NavigationProperty Name="NMEA_Feeds" Relationship="MarineExchangeModel.FK_Subscription_NMEA_Feeds" FromRole="Subscription" ToRole="NMEA_Feeds" />
+  </EntityType>
+  <Association Name="FK_Client_Addresses_Client">
+    <End Role="Client" Type="MarineExchangeModel.DBClient" Multiplicity="1" />
+    <End Role="Client_Addresses" Type="MarineExchangeModel.DBClientAddresses" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="client_id" />
+      </Principal>
+      <Dependent Role="Client_Addresses">
+        <PropertyRef Name="client_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Client_Authentication_Client">
+    <End Role="Client" Type="MarineExchangeModel.DBClient" Multiplicity="1" />
+    <End Role="Client_Authentication" Type="MarineExchangeModel.DBClientAuthentication" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="client_id" />
+      </Principal>
+      <Dependent Role="Client_Authentication">
+        <PropertyRef Name="client_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Subscription_Client">
+    <End Role="Client" Type="MarineExchangeModel.DBClient" Multiplicity="1" />
+    <End Role="Subscription" Type="MarineExchangeModel.DBSubscription" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="client_id" />
+      </Principal>
+      <Dependent Role="Subscription">
+        <PropertyRef Name="client_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Current_Connection_Subscription">
+    <End Role="Subscription" Type="MarineExchangeModel.DBSubscription" Multiplicity="1" />
+    <End Role="Current_Connection" Type="MarineExchangeModel.DBCurrentConnection" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Subscription">
+        <PropertyRef Name="subscription_id" />
+      </Principal>
+      <Dependent Role="Current_Connection">
+        <PropertyRef Name="subscription_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Subscription_NMEA_Feeds">
+    <End Role="NMEA_Feeds" Type="MarineExchangeModel.DBNMEAFeeds" Multiplicity="1" />
+    <End Role="Subscription" Type="MarineExchangeModel.DBSubscription" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="NMEA_Feeds">
+        <PropertyRef Name="nmea_feed_id" />
+      </Principal>
+      <Dependent Role="Subscription">
+        <PropertyRef Name="nmea_feed_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <ComplexType Name="CheckUser_Result">
+    <Property Type="Int32" Name="subscription_id" Nullable="false" />
+    <Property Type="Int32" Name="client_id" Nullable="false" />
+    <Property Type="Int32" Name="maximum_allowable_connections" Nullable="false" />
+    <Property Type="Int32" Name="nmea_feed_id" Nullable="false" />
+    <Property Type="Boolean" Name="active" Nullable="false" />
+  </ComplexType>
+  <ComplexType Name="GetSubscriptions_Result">
+    <Property Type="Int32" Name="subscription_id" Nullable="false" />
+    <Property Type="String" Name="feed_name" Nullable="false" MaxLength="250" />
+    <Property Type="Int32" Name="nmea_feed_id" Nullable="false" />
+    <Property Type="String" Name="feed_description" Nullable="false" MaxLength="1000" />
+    <Property Type="Decimal" Name="subscription_price" Nullable="false" Precision="19" />
+  </ComplexType>
+</Schema>

@@ -36,6 +36,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -45,10 +48,24 @@
   <ItemGroup>
     <Compile Include="AsynchronousClient.cs" />
     <Compile Include="AsyncronousSocketListener.cs" />
+    <Compile Include="MarineExchange.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MarineExchange.edmx</DependentUpon>
+    </Compile>
     <Compile Include="NMEAFeed.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StateObject.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EntityDeploy Include="MarineExchange.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>MarineExchange.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.Config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

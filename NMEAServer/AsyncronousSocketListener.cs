@@ -13,11 +13,13 @@ namespace NMEAServer
         //private IPAddress _serverIP = new IPAddress(new Byte[] { 127, 0, 0, 1 });
         private IPAddress _serverIP = new IPAddress(new Byte[] { 192, 168, 70, 128 });
         private int _serverPortNumber = 10116;
+        private MarineExchangeEntities m_MarineExchangeDB;
 
         //private NMEAFeed feed = new NMEAFeed();
         private List<NMEAFeed> _feeds;
         private String localBuffer = "";
         private List<AsynchronousClient> _clients;
+        private Dictionary<int, string> _feedBuffers;
 
         // _allDone is shared between all the threads to signal to the listener when to begin accepting new connections again
         private ManualResetEvent _allDone = new ManualResetEvent(false);
@@ -29,6 +31,46 @@ namespace NMEAServer
             //_serverIP = new IPAddress(new Byte[] { 127, 0, 0, 1 }); // both of these will be configurable
             _serverIP = new IPAddress(new Byte[] { 192, 168, 70, 128 });
             _serverPortNumber = 10116;
+        }
+
+        private void SetupFeeds()
+        {
+            try
+            {
+                // set up dictionary to store feed buffers for passing to clients
+                _feedBuffers = new Dictionary<int, string>();
+
+                // retrieve list of feeds from database
+                List<DBNMEAFeeds> feedsList;
+                feedsList = m_MarineExchangeDB.GetNMEAFeeds().ToList();
+
+                _feeds = new List<NMEAFeed>();
+
+                foreach (DBNMEAFeeds feedFromDB in feedsList)
+                {
+                    IPAddress address;
+
+                    // parse the IP address retrieved from the database
+                    if (IPAddress.TryParse(feedFromDB.ip_address, out address))
+                    {
+                        // add each feed ID as a key to the Feed Buffers dictionary. Leave the actual buffer string empty
+                        _feedBuffers.Add(feedFromDB.nmea_feed_id, string.Empty);
+
+                        // initialize each feed
+                        NMEAFeed newFeed = new NMEAFeed(address, feedFromDB.server_port_number, feedFromDB.nmea_feed_id);
+                        _feeds.Add(newFeed);
+
+                        // each feed runs in it's own thread
+                        Thread feedThread = new Thread(() => newFeed.StartListening());
+                        feedThread.Start();
+                    }
+                }
+            }
+            catch (Exception error)
+            {
+                // will log error here
+                Console.WriteLine("ERROR: " + error.ToString());
+            }
         }
 
         // main method
@@ -47,17 +89,8 @@ namespace NMEAServer
             List<Thread> listOfThreads = new List<Thread>();
             _clients = new List<AsynchronousClient>();
 
-            //List<NMEAFeed> listOfFeeds = new List<NMEAFeed>();
-            _feeds = new List<NMEAFeed>();
-            NMEAFeed feed1 = new NMEAFeed(new IPAddress(new Byte[] { 216, 67, 61, 34 }), 10090);
-            _feeds.Add(feed1);
-            NMEAFeed feed2 = new NMEAFeed(new IPAddress(new Byte[] { 216, 67, 61, 34 }), 11035);
-            _feeds.Add(feed2);
-
-            Thread feed1Thread = new Thread(() => feed1.StartListening());
-            feed1Thread.Start();
-            Thread feed2Thread = new Thread(() => feed2.StartListening());
-            feed2Thread.Start();
+            // connect to feeds configured in database
+            SetupFeeds();
 
             Thread transferBufferThread = new Thread(() => CheckFeedBuffer());
             transferBufferThread.Start();
@@ -70,14 +103,9 @@ namespace NMEAServer
 
                 while (true)
                 {
+                    // reset _addDone - will be set again in BeginAccept
                     _allDone.Reset();
 
-                    // BeginAccept in loop - wrap in thread (should these threads be foreground or background threads?)
-                    //Thread newThread = new Thread(() =>
-                    //                        listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), listener));
-                    //newThread.Start();
-                    //listOfThreads.Add(newThread);
-                    //listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), listener);
                     Socket newSocket = null;
                     EntireConnection newConnection = (EntireConnection)listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), new EntireConnection { serverSocket = listener, clientSocket = newSocket }).AsyncState;
                     
@@ -103,7 +131,11 @@ namespace NMEAServer
                 {
                     lock (feed.sb)
                     {
-                        localBuffer += feed.sb.ToString();
+                        // look up the feed ID in the Feed Buffer dictionary
+                        if (_feedBuffers.ContainsKey(feed.FeedID))
+                        {
+                            _feedBuffers[feed.FeedID] = feed.sb.ToString();
+                        }
 
                         feed.sb.Clear();
                     }
@@ -112,7 +144,16 @@ namespace NMEAServer
                 // write localBuffer to each connected client (so client is not sent duplicate data) (once this is implemented, won't need to lock localBuffer)
                 foreach (AsynchronousClient client in _clients)
                 {
-                    client.LocalBuffer = localBuffer;
+                    lock (client.LocalBuffer)
+                    {
+                        foreach (int feedID in client.FeedSubscriptions)
+                        {
+                            if (_feedBuffers.ContainsKey(feedID))
+                            {
+                                client.LocalBuffer += _feedBuffers[feedID];
+                            }
+                        }
+                    }
                 }
 
                 localBuffer = string.Empty;

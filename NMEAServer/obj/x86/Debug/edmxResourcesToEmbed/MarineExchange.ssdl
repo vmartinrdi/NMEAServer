@@ -1,0 +1,307 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="MarineExchangeModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2008" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
+  <EntityContainer Name="MarineExchangeModelStoreContainer">
+    <EntitySet Name="Activity_Log" EntityType="MarineExchangeModel.Store.Activity_Log" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Client" EntityType="MarineExchangeModel.Store.Client" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Client_Addresses" EntityType="MarineExchangeModel.Store.Client_Addresses" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Client_Authentication" EntityType="MarineExchangeModel.Store.Client_Authentication" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Current_Connection" EntityType="MarineExchangeModel.Store.Current_Connection" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Device_Type" EntityType="MarineExchangeModel.Store.Device_Type" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Error_Log" EntityType="MarineExchangeModel.Store.Error_Log" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="NMEA_Feeds" EntityType="MarineExchangeModel.Store.NMEA_Feeds" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Subscription" EntityType="MarineExchangeModel.Store.Subscription" store:Type="Tables" Schema="dbo" />
+    <AssociationSet Name="FK_Client_Addresses_Client" Association="MarineExchangeModel.Store.FK_Client_Addresses_Client">
+      <End Role="Client" EntitySet="Client" />
+      <End Role="Client_Addresses" EntitySet="Client_Addresses" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Client_Authentication_Client" Association="MarineExchangeModel.Store.FK_Client_Authentication_Client">
+      <End Role="Client" EntitySet="Client" />
+      <End Role="Client_Authentication" EntitySet="Client_Authentication" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Current_Connection_Subscription" Association="MarineExchangeModel.Store.FK_Current_Connection_Subscription">
+      <End Role="Subscription" EntitySet="Subscription" />
+      <End Role="Current_Connection" EntitySet="Current_Connection" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Subscription_Client" Association="MarineExchangeModel.Store.FK_Subscription_Client">
+      <End Role="Client" EntitySet="Client" />
+      <End Role="Subscription" EntitySet="Subscription" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Subscription_NMEA_Feeds" Association="MarineExchangeModel.Store.FK_Subscription_NMEA_Feeds">
+      <End Role="NMEA_Feeds" EntitySet="NMEA_Feeds" />
+      <End Role="Subscription" EntitySet="Subscription" />
+    </AssociationSet>
+  </EntityContainer>
+  <EntityType Name="Activity_Log">
+    <Key>
+      <PropertyRef Name="activity_log_id" />
+    </Key>
+    <Property Name="activity_log_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="subscription_id" Type="int" />
+    <Property Name="activity_datetime" Type="datetime" Nullable="false" />
+    <Property Name="accessed_by_ip_address" Type="varchar" Nullable="false" MaxLength="15" />
+    <Property Name="connection_start_datetime" Type="datetime" Nullable="false" />
+    <Property Name="connection_last_datetime" Type="datetime" Nullable="false" />
+    <Property Name="nmea_feed_id" Type="int" />
+    <Property Name="client_id" Type="int" />
+  </EntityType>
+  <EntityType Name="Client">
+    <Key>
+      <PropertyRef Name="client_id" />
+    </Key>
+    <Property Name="client_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="contact_name_first" Type="varchar" Nullable="false" MaxLength="250" />
+    <Property Name="contact_name_last" Type="varchar" Nullable="false" MaxLength="250" />
+    <Property Name="company_name" Type="varchar" MaxLength="250" />
+  </EntityType>
+  <EntityType Name="Client_Addresses">
+    <Key>
+      <PropertyRef Name="client_address_id" />
+    </Key>
+    <Property Name="client_address_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="billing_or_mailing_address" Type="varchar" Nullable="false" MaxLength="250" />
+    <Property Name="street1" Type="varchar" Nullable="false" MaxLength="250" />
+    <Property Name="street2" Type="varchar" Nullable="false" MaxLength="250" />
+    <Property Name="city" Type="varchar" Nullable="false" MaxLength="50" />
+    <Property Name="state_code" Type="varchar" Nullable="false" MaxLength="2" />
+    <Property Name="zip_code" Type="varchar" Nullable="false" MaxLength="13" />
+    <Property Name="client_id" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="Client_Authentication">
+    <Key>
+      <PropertyRef Name="authentication_id" />
+    </Key>
+    <Property Name="device_id" Type="varchar" Nullable="false" MaxLength="40" />
+    <Property Name="device_type" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="client_id" Type="int" Nullable="false" />
+    <Property Name="authentication_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+  </EntityType>
+  <EntityType Name="Current_Connection">
+    <Key>
+      <PropertyRef Name="connection_Id" />
+    </Key>
+    <Property Name="connection_Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="subscription_id" Type="int" Nullable="false" />
+    <Property Name="connection_ip_address" Type="varchar" Nullable="false" MaxLength="15" />
+    <Property Name="connection_start_datetime" Type="datetime" Nullable="false" />
+    <Property Name="connection_last_datetime" Type="datetime" Nullable="false" />
+  </EntityType>
+  <EntityType Name="Device_Type">
+    <Key>
+      <PropertyRef Name="device_type" />
+    </Key>
+    <Property Name="device_type" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="device_description" Type="varchar" Nullable="false" MaxLength="100" />
+  </EntityType>
+  <EntityType Name="Error_Log">
+    <Key>
+      <PropertyRef Name="error_log_id" />
+    </Key>
+    <Property Name="error_log_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="error_description" Type="varchar" Nullable="false" MaxLength="1000" />
+    <Property Name="stack_trace" Type="varchar" MaxLength="1000" />
+    <Property Name="error_thrown_from" Type="varchar" MaxLength="1000" />
+    <Property Name="inner_exception" Type="varchar" MaxLength="1000" />
+    <Property Name="target_site" Type="varchar" MaxLength="1000" />
+    <Property Name="error_datetime" Type="datetime" Nullable="false" />
+    <Property Name="nmea_feed_id" Type="int" />
+    <Property Name="subscription_id" Type="int" />
+    <Property Name="client_id" Type="int" />
+  </EntityType>
+  <EntityType Name="NMEA_Feeds">
+    <Key>
+      <PropertyRef Name="nmea_feed_id" />
+    </Key>
+    <Property Name="nmea_feed_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="feed_name" Type="varchar" Nullable="false" MaxLength="250" />
+    <Property Name="feed_description" Type="varchar" Nullable="false" MaxLength="1000" />
+    <Property Name="subscription_price" Type="money" Nullable="false" />
+    <Property Name="ip_address" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="server_port_number" Type="int" Nullable="false" />
+    <Property Name="northwest_coordinates" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="northeast_coordinates" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="southwest_coordinates" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="southeast_coordinates" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="isActive" Type="bit" />
+  </EntityType>
+  <EntityType Name="Subscription">
+    <Key>
+      <PropertyRef Name="subscription_id" />
+    </Key>
+    <Property Name="subscription_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="client_id" Type="int" Nullable="false" />
+    <Property Name="maximum_allowable_connections" Type="int" Nullable="false" />
+    <Property Name="nmea_feed_id" Type="int" Nullable="false" />
+    <Property Name="active" Type="bit" Nullable="false" />
+  </EntityType>
+  <Association Name="FK_Client_Addresses_Client">
+    <End Role="Client" Type="MarineExchangeModel.Store.Client" Multiplicity="1" />
+    <End Role="Client_Addresses" Type="MarineExchangeModel.Store.Client_Addresses" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="client_id" />
+      </Principal>
+      <Dependent Role="Client_Addresses">
+        <PropertyRef Name="client_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Client_Authentication_Client">
+    <End Role="Client" Type="MarineExchangeModel.Store.Client" Multiplicity="1" />
+    <End Role="Client_Authentication" Type="MarineExchangeModel.Store.Client_Authentication" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="client_id" />
+      </Principal>
+      <Dependent Role="Client_Authentication">
+        <PropertyRef Name="client_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Current_Connection_Subscription">
+    <End Role="Subscription" Type="MarineExchangeModel.Store.Subscription" Multiplicity="1" />
+    <End Role="Current_Connection" Type="MarineExchangeModel.Store.Current_Connection" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Subscription">
+        <PropertyRef Name="subscription_id" />
+      </Principal>
+      <Dependent Role="Current_Connection">
+        <PropertyRef Name="subscription_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Subscription_Client">
+    <End Role="Client" Type="MarineExchangeModel.Store.Client" Multiplicity="1" />
+    <End Role="Subscription" Type="MarineExchangeModel.Store.Subscription" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="client_id" />
+      </Principal>
+      <Dependent Role="Subscription">
+        <PropertyRef Name="client_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Subscription_NMEA_Feeds">
+    <End Role="NMEA_Feeds" Type="MarineExchangeModel.Store.NMEA_Feeds" Multiplicity="1" />
+    <End Role="Subscription" Type="MarineExchangeModel.Store.Subscription" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="NMEA_Feeds">
+        <PropertyRef Name="nmea_feed_id" />
+      </Principal>
+      <Dependent Role="Subscription">
+        <PropertyRef Name="nmea_feed_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Function Name="CheckUser" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ItemID" Type="varchar" Mode="In" />
+    <Parameter Name="IPAddress" Type="varchar" Mode="In" />
+    <Parameter Name="clientID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="CheckUserByIP" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="IPAddress" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="DeleteClient" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="DeleteClientDevice" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="authentication_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="DeleteFeed" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="feed_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="GetClientActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="fromDate" Type="datetime" Mode="In" />
+    <Parameter Name="toDate" Type="datetime" Mode="In" />
+  </Function>
+  <Function Name="GetClientDevices" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="clientID" Type="int" Mode="In" />
+    <Parameter Name="device_Type" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="GetClientInformation" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="GetClients" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="GetDeviceTypes" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="GetFeedActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="feed_id" Type="int" Mode="In" />
+    <Parameter Name="fromDate" Type="datetime" Mode="In" />
+    <Parameter Name="toDate" Type="datetime" Mode="In" />
+  </Function>
+  <Function Name="GetNMEAFeeds" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="GetSubscriptionInformation" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="subscription_ID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="GetSubscriptions" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="GetTotalSubscriptionCosts" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="HasSubscription" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="clientID" Type="int" Mode="In" />
+    <Parameter Name="feedID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="LogActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="subscription_id" Type="int" Mode="In" />
+    <Parameter Name="ip_address" Type="varchar" Mode="In" />
+    <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="LogError" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="error_description" Type="varchar" Mode="In" />
+    <Parameter Name="stack_trace" Type="varchar" Mode="In" />
+    <Parameter Name="error_thrown_from" Type="varchar" Mode="In" />
+    <Parameter Name="inner_exception" Type="varchar" Mode="In" />
+    <Parameter Name="target_site" Type="varchar" Mode="In" />
+    <Parameter Name="error_datetime" Type="datetime" Mode="In" />
+    <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
+    <Parameter Name="device_id" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="UpdateLogActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="subscription_id" Type="int" Mode="In" />
+    <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="UpsertClient" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="first_name" Type="varchar" Mode="In" />
+    <Parameter Name="last_name" Type="varchar" Mode="In" />
+    <Parameter Name="company_name" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="UpsertClientAddress" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_address_id" Type="int" Mode="In" />
+    <Parameter Name="billing_or_mailing_address" Type="varchar" Mode="In" />
+    <Parameter Name="street1" Type="varchar" Mode="In" />
+    <Parameter Name="street2" Type="varchar" Mode="In" />
+    <Parameter Name="city" Type="varchar" Mode="In" />
+    <Parameter Name="state_code" Type="varchar" Mode="In" />
+    <Parameter Name="zip_code" Type="varchar" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="UpsertClientDevice" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="authentication_id" Type="int" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="device_id" Type="varchar" Mode="In" />
+    <Parameter Name="device_type" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="UpsertNMEA_Feed" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
+    <Parameter Name="feed_name" Type="varchar" Mode="In" />
+    <Parameter Name="feed_description" Type="varchar" Mode="In" />
+    <Parameter Name="subscription_price" Type="money" Mode="In" />
+    <Parameter Name="ip_address" Type="varchar" Mode="In" />
+    <Parameter Name="server_port_number" Type="int" Mode="In" />
+    <Parameter Name="northwest_coordinates" Type="varchar" Mode="In" />
+    <Parameter Name="northeast_coordinates" Type="varchar" Mode="In" />
+    <Parameter Name="southwest_coordinates" Type="varchar" Mode="In" />
+    <Parameter Name="southeast_coordinates" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="UpsertSubscription" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="nmea_feed" Type="int" Mode="In" />
+    <Parameter Name="subscription_id" Type="int" Mode="In" />
+    <Parameter Name="activate" Type="bit" Mode="In" />
+  </Function>
+</Schema>
