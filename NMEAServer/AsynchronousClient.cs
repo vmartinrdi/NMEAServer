@@ -27,7 +27,7 @@ namespace NMEAServer
         // new properties
         private Thread _thread;
         public string LocalBuffer = string.Empty;
-        public int[] FeedSubscriptions;
+        public List<int> FeedSubscriptions;
 
         // accepts an open socket created from the listener
         public AsynchronousClient(Socket socket)
@@ -40,6 +40,8 @@ namespace NMEAServer
 
         public void Start()
         {
+            m_MarineExchangeDB = new MarineExchangeEntities();
+
             // clients are authenticated either by IP or by iDevice ID
             // if by IP, the client just listens, and never sends any data
             // so check if IP is authorized first (there are problems with this - authorizing a single IP may authorize more users than anticipated. MXAK is aware of this)
@@ -53,14 +55,13 @@ namespace NMEAServer
 
                 if (hasClient != null)
                 {
-                    if (hasClient.Count() > 0)
+                    foreach (int clientID in hasClient)
                     {
-                        if (hasClient.First().Value != null)
-                        {
-                            isAuthorized = true;
-                            ClientID = hasClient.First().Value;
-                            DeviceID = "";
-                        }
+                        isAuthorized = true;
+                        ClientID = clientID;
+                        DeviceID = "";
+
+                        break;
                     }
                 }
             }
@@ -82,9 +83,11 @@ namespace NMEAServer
 
                 if (clientSubscriptions != null)
                 {
-                    if (clientSubscriptions.Count() > 0)
-                    {
+                    FeedSubscriptions = new List<int>();
 
+                    foreach (CheckUser_Result subscription in clientSubscriptions)
+                    {
+                        FeedSubscriptions.Add(subscription.nmea_feed_id);
                     }
                 }
 
@@ -121,13 +124,12 @@ namespace NMEAServer
                 System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByDevice(client.DeviceID);
                 if (hasClient != null)
                 {
-                    if (hasClient.Count() > 0)
+                    foreach (int clientID in hasClient)
                     {
-                        if (hasClient.First().Value != null)
-                        {
-                            ClientID = hasClient.First().Value;
-                            DeviceID = client.DeviceID;
-                        }
+                        ClientID = clientID;
+                        DeviceID = client.DeviceID;
+
+                        break;
                     }
                 }
 

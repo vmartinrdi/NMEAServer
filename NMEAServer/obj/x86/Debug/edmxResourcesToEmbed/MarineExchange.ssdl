@@ -194,9 +194,10 @@
     </ReferentialConstraint>
   </Association>
   <Function Name="CheckUser" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-    <Parameter Name="ItemID" Type="varchar" Mode="In" />
-    <Parameter Name="IPAddress" Type="varchar" Mode="In" />
     <Parameter Name="clientID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="CheckUserByDevice" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="DeviceID" Type="varchar" Mode="In" />
   </Function>
   <Function Name="CheckUserByIP" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
     <Parameter Name="IPAddress" Type="varchar" Mode="In" />

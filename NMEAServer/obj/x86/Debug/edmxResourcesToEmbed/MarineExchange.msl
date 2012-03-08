@@ -112,17 +112,6 @@
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>
-    <FunctionImportMapping FunctionImportName="CheckUser" FunctionName="MarineExchangeModel.Store.CheckUser">
-      <ResultMapping>
-        <ComplexTypeMapping TypeName="MarineExchangeModel.CheckUser_Result">
-          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
-          <ScalarProperty Name="client_id" ColumnName="client_id" />
-          <ScalarProperty Name="maximum_allowable_connections" ColumnName="maximum_allowable_connections" />
-          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
-          <ScalarProperty Name="active" ColumnName="active" />
-        </ComplexTypeMapping>
-      </ResultMapping>
-    </FunctionImportMapping>
     <FunctionImportMapping FunctionImportName="CheckUserByIP" FunctionName="MarineExchangeModel.Store.CheckUserByIP" />
     <FunctionImportMapping FunctionImportName="GetNMEAFeeds" FunctionName="MarineExchangeModel.Store.GetNMEAFeeds" />
     <FunctionImportMapping FunctionImportName="GetSubscriptions" FunctionName="MarineExchangeModel.Store.GetSubscriptions">
@@ -139,5 +128,17 @@
     <FunctionImportMapping FunctionImportName="HasSubscription" FunctionName="MarineExchangeModel.Store.HasSubscription" />
     <FunctionImportMapping FunctionImportName="LogActivity" FunctionName="MarineExchangeModel.Store.LogActivity" />
     <FunctionImportMapping FunctionImportName="LogError" FunctionName="MarineExchangeModel.Store.LogError" />
+    <FunctionImportMapping FunctionImportName="CheckUserByDevice" FunctionName="MarineExchangeModel.Store.CheckUserByDevice" />
+    <FunctionImportMapping FunctionImportName="FetchClientSubscriptions" FunctionName="MarineExchangeModel.Store.CheckUser">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="MarineExchangeModel.CheckUser_Result">
+          <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+          <ScalarProperty Name="client_id" ColumnName="client_id" />
+          <ScalarProperty Name="maximum_allowable_connections" ColumnName="maximum_allowable_connections" />
+          <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
+          <ScalarProperty Name="active" ColumnName="active" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
   </EntityContainerMapping>
 </Mapping>

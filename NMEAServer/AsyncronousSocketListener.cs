@@ -13,10 +13,11 @@ namespace NMEAServer
         //private IPAddress _serverIP = new IPAddress(new Byte[] { 127, 0, 0, 1 });
         private IPAddress _serverIP = new IPAddress(new Byte[] { 192, 168, 70, 128 });
         private int _serverPortNumber = 10116;
+        private int _bufferTransferTime = 1000;
         private MarineExchangeEntities m_MarineExchangeDB;
 
         //private NMEAFeed feed = new NMEAFeed();
-        private List<NMEAFeed> _feeds;
+        private List<NMEAFeed> _feeds = new List<NMEAFeed>();
         private String localBuffer = "";
         private List<AsynchronousClient> _clients;
         private Dictionary<int, string> _feedBuffers;
@@ -33,6 +34,13 @@ namespace NMEAServer
             _serverPortNumber = 10116;
         }
 
+        public AsyncronousSocketListener(IPAddress serverIP, int portNumber, int transferTime)
+        {
+            _serverIP = serverIP;
+            _serverPortNumber = portNumber;
+            _bufferTransferTime = transferTime;
+        }
+
         private void SetupFeeds()
         {
             try
@@ -43,8 +51,6 @@ namespace NMEAServer
                 // retrieve list of feeds from database
                 List<DBNMEAFeeds> feedsList;
                 feedsList = m_MarineExchangeDB.GetNMEAFeeds().ToList();
-
-                _feeds = new List<NMEAFeed>();
 
                 foreach (DBNMEAFeeds feedFromDB in feedsList)
                 {
@@ -77,6 +83,8 @@ namespace NMEAServer
         // call this method to start the server
         public void StartListening()
         {
+            m_MarineExchangeDB = new MarineExchangeEntities();
+
             IPHostEntry ipHostInfo = new IPHostEntry();
             ipHostInfo.AddressList = new IPAddress[] { _serverIP };
             IPAddress ipAddress = ipHostInfo.AddressList[0];
@@ -92,34 +100,37 @@ namespace NMEAServer
             // connect to feeds configured in database
             SetupFeeds();
 
-            Thread transferBufferThread = new Thread(() => CheckFeedBuffer());
-            transferBufferThread.Start();
-
-            // start the listener socket
-            try
+            if (_feeds.Count() > 0)
             {
-                listener.Bind(localEndPoint);
-                listener.Listen(100);
+                Thread transferBufferThread = new Thread(() => CheckFeedBuffer());
+                transferBufferThread.Start();
 
-                while (true)
+                // start the listener socket
+                try
                 {
-                    // reset _addDone - will be set again in BeginAccept
-                    _allDone.Reset();
+                    listener.Bind(localEndPoint);
+                    listener.Listen(100);
 
-                    Socket newSocket = null;
-                    EntireConnection newConnection = (EntireConnection)listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), new EntireConnection { serverSocket = listener, clientSocket = newSocket }).AsyncState;
-                    
-                    // wait till accept is complete
-                    _allDone.WaitOne();
+                    while (true)
+                    {
+                        // reset _addDone - will be set again in BeginAccept
+                        _allDone.Reset();
 
-                    // create new client - client has own thread which starts processing
-                    AsynchronousClient newClient = new AsynchronousClient(newConnection.clientSocket);
-                    _clients.Add(newClient);
+                        Socket newSocket = null;
+                        EntireConnection newConnection = (EntireConnection)listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), new EntireConnection { serverSocket = listener, clientSocket = newSocket }).AsyncState;
+
+                        // wait till accept is complete
+                        _allDone.WaitOne();
+
+                        // create new client - client has own thread which starts processing
+                        AsynchronousClient newClient = new AsynchronousClient(newConnection.clientSocket);
+                        _clients.Add(newClient);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("ERROR: " + e.ToString());
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERROR: " + e.ToString());
+                }
             }
         }
 
@@ -146,11 +157,14 @@ namespace NMEAServer
                 {
                     lock (client.LocalBuffer)
                     {
-                        foreach (int feedID in client.FeedSubscriptions)
+                        if (client.FeedSubscriptions != null)
                         {
-                            if (_feedBuffers.ContainsKey(feedID))
+                            foreach (int feedID in client.FeedSubscriptions)
                             {
-                                client.LocalBuffer += _feedBuffers[feedID];
+                                if (_feedBuffers.ContainsKey(feedID))
+                                {
+                                    client.LocalBuffer += _feedBuffers[feedID];
+                                }
                             }
                         }
                     }
@@ -158,7 +172,7 @@ namespace NMEAServer
 
                 localBuffer = string.Empty;
 
-                Thread.Sleep(1000); // sleep for two seconds - this will be configurable
+                Thread.Sleep(_bufferTransferTime); 
             }
         }
 

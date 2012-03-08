@@ -30,11 +30,6 @@
       <End Role="NMEA_Feeds" EntitySet="DBNMEAFeeds" />
       <End Role="Subscription" EntitySet="DBSubscriptions" />
     </AssociationSet>
-    <FunctionImport Name="CheckUser" ReturnType="Collection(MarineExchangeModel.CheckUser_Result)">
-      <Parameter Name="ItemID" Mode="In" Type="String" />
-      <Parameter Name="IPAddress" Mode="In" Type="String" />
-      <Parameter Name="clientID" Mode="In" Type="Int32" />
-    </FunctionImport>
     <FunctionImport Name="CheckUserByIP" ReturnType="Collection(Int32)">
       <Parameter Name="IPAddress" Mode="In" Type="String" />
     </FunctionImport>
@@ -61,6 +56,12 @@
       <Parameter Name="error_datetime" Mode="In" Type="DateTime" />
       <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
       <Parameter Name="device_id" Mode="In" Type="String" />
+    </FunctionImport>
+    <FunctionImport Name="CheckUserByDevice" ReturnType="Collection(Int32)">
+      <Parameter Name="DeviceID" Mode="In" Type="String" />
+    </FunctionImport>
+    <FunctionImport Name="FetchClientSubscriptions" ReturnType="Collection(MarineExchangeModel.CheckUser_Result)">
+      <Parameter Name="clientID" Mode="In" Type="Int32" />
     </FunctionImport>
   </EntityContainer>
   <EntityType Name="DBActivityLog">
