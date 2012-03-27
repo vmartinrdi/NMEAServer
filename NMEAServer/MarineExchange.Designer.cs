@@ -383,22 +383,11 @@ namespace NMEAServer
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        /// <param name="subscription_id">No Metadata Documentation available.</param>
         /// <param name="ip_address">No Metadata Documentation available.</param>
-        /// <param name="nmea_feed_id">No Metadata Documentation available.</param>
         /// <param name="client_id">No Metadata Documentation available.</param>
-        public ObjectResult<Nullable<global::System.Decimal>> LogActivity(Nullable<global::System.Int32> subscription_id, global::System.String ip_address, Nullable<global::System.Int32> nmea_feed_id, Nullable<global::System.Int32> client_id)
+        /// <param name="device_id">No Metadata Documentation available.</param>
+        public ObjectResult<Nullable<global::System.Decimal>> LogActivity(global::System.String ip_address, Nullable<global::System.Int32> client_id, global::System.String device_id)
         {
-            ObjectParameter subscription_idParameter;
-            if (subscription_id.HasValue)
-            {
-                subscription_idParameter = new ObjectParameter("subscription_id", subscription_id);
-            }
-            else
-            {
-                subscription_idParameter = new ObjectParameter("subscription_id", typeof(global::System.Int32));
-            }
-    
             ObjectParameter ip_addressParameter;
             if (ip_address != null)
             {
@@ -407,16 +396,6 @@ namespace NMEAServer
             else
             {
                 ip_addressParameter = new ObjectParameter("ip_address", typeof(global::System.String));
-            }
-    
-            ObjectParameter nmea_feed_idParameter;
-            if (nmea_feed_id.HasValue)
-            {
-                nmea_feed_idParameter = new ObjectParameter("nmea_feed_id", nmea_feed_id);
-            }
-            else
-            {
-                nmea_feed_idParameter = new ObjectParameter("nmea_feed_id", typeof(global::System.Int32));
             }
     
             ObjectParameter client_idParameter;
@@ -429,7 +408,17 @@ namespace NMEAServer
                 client_idParameter = new ObjectParameter("client_id", typeof(global::System.Int32));
             }
     
-            return base.ExecuteFunction<Nullable<global::System.Decimal>>("LogActivity", subscription_idParameter, ip_addressParameter, nmea_feed_idParameter, client_idParameter);
+            ObjectParameter device_idParameter;
+            if (device_id != null)
+            {
+                device_idParameter = new ObjectParameter("device_id", device_id);
+            }
+            else
+            {
+                device_idParameter = new ObjectParameter("device_id", typeof(global::System.String));
+            }
+    
+            return base.ExecuteFunction<Nullable<global::System.Decimal>>("LogActivity", ip_addressParameter, client_idParameter, device_idParameter);
         }
     
         /// <summary>
@@ -442,8 +431,9 @@ namespace NMEAServer
         /// <param name="target_site">No Metadata Documentation available.</param>
         /// <param name="error_datetime">No Metadata Documentation available.</param>
         /// <param name="nmea_feed_id">No Metadata Documentation available.</param>
+        /// <param name="client_id">No Metadata Documentation available.</param>
         /// <param name="device_id">No Metadata Documentation available.</param>
-        public int LogError(global::System.String error_description, global::System.String stack_trace, global::System.String error_thrown_from, global::System.String inner_exception, global::System.String target_site, Nullable<global::System.DateTime> error_datetime, Nullable<global::System.Int32> nmea_feed_id, global::System.String device_id)
+        public int LogError(global::System.String error_description, global::System.String stack_trace, global::System.String error_thrown_from, global::System.String inner_exception, global::System.String target_site, Nullable<global::System.DateTime> error_datetime, Nullable<global::System.Int32> nmea_feed_id, Nullable<global::System.Int32> client_id, global::System.String device_id)
         {
             ObjectParameter error_descriptionParameter;
             if (error_description != null)
@@ -515,6 +505,16 @@ namespace NMEAServer
                 nmea_feed_idParameter = new ObjectParameter("nmea_feed_id", typeof(global::System.Int32));
             }
     
+            ObjectParameter client_idParameter;
+            if (client_id.HasValue)
+            {
+                client_idParameter = new ObjectParameter("client_id", client_id);
+            }
+            else
+            {
+                client_idParameter = new ObjectParameter("client_id", typeof(global::System.Int32));
+            }
+    
             ObjectParameter device_idParameter;
             if (device_id != null)
             {
@@ -525,7 +525,7 @@ namespace NMEAServer
                 device_idParameter = new ObjectParameter("device_id", typeof(global::System.String));
             }
     
-            return base.ExecuteFunction("LogError", error_descriptionParameter, stack_traceParameter, error_thrown_fromParameter, inner_exceptionParameter, target_siteParameter, error_datetimeParameter, nmea_feed_idParameter, device_idParameter);
+            return base.ExecuteFunction("LogError", error_descriptionParameter, stack_traceParameter, error_thrown_fromParameter, inner_exceptionParameter, target_siteParameter, error_datetimeParameter, nmea_feed_idParameter, client_idParameter, device_idParameter);
         }
     
         /// <summary>
@@ -565,6 +565,88 @@ namespace NMEAServer
     
             return base.ExecuteFunction<CheckUser_Result>("FetchClientSubscriptions", clientIDParameter);
         }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        /// <param name="ip_address">No Metadata Documentation available.</param>
+        /// <param name="client_id">No Metadata Documentation available.</param>
+        /// <param name="device_id">No Metadata Documentation available.</param>
+        public ObjectResult<Nullable<global::System.Decimal>> LogOpenConnection(global::System.String ip_address, Nullable<global::System.Int32> client_id, global::System.String device_id)
+        {
+            ObjectParameter ip_addressParameter;
+            if (ip_address != null)
+            {
+                ip_addressParameter = new ObjectParameter("ip_address", ip_address);
+            }
+            else
+            {
+                ip_addressParameter = new ObjectParameter("ip_address", typeof(global::System.String));
+            }
+    
+            ObjectParameter client_idParameter;
+            if (client_id.HasValue)
+            {
+                client_idParameter = new ObjectParameter("client_id", client_id);
+            }
+            else
+            {
+                client_idParameter = new ObjectParameter("client_id", typeof(global::System.Int32));
+            }
+    
+            ObjectParameter device_idParameter;
+            if (device_id != null)
+            {
+                device_idParameter = new ObjectParameter("device_id", device_id);
+            }
+            else
+            {
+                device_idParameter = new ObjectParameter("device_id", typeof(global::System.String));
+            }
+    
+            return base.ExecuteFunction<Nullable<global::System.Decimal>>("LogOpenConnection", ip_addressParameter, client_idParameter, device_idParameter);
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        /// <param name="ip_address">No Metadata Documentation available.</param>
+        /// <param name="client_id">No Metadata Documentation available.</param>
+        /// <param name="device_id">No Metadata Documentation available.</param>
+        public ObjectResult<Nullable<global::System.Decimal>> LogCloseConnection(global::System.String ip_address, Nullable<global::System.Int32> client_id, global::System.String device_id)
+        {
+            ObjectParameter ip_addressParameter;
+            if (ip_address != null)
+            {
+                ip_addressParameter = new ObjectParameter("ip_address", ip_address);
+            }
+            else
+            {
+                ip_addressParameter = new ObjectParameter("ip_address", typeof(global::System.String));
+            }
+    
+            ObjectParameter client_idParameter;
+            if (client_id.HasValue)
+            {
+                client_idParameter = new ObjectParameter("client_id", client_id);
+            }
+            else
+            {
+                client_idParameter = new ObjectParameter("client_id", typeof(global::System.Int32));
+            }
+    
+            ObjectParameter device_idParameter;
+            if (device_id != null)
+            {
+                device_idParameter = new ObjectParameter("device_id", device_id);
+            }
+            else
+            {
+                device_idParameter = new ObjectParameter("device_id", typeof(global::System.String));
+            }
+    
+            return base.ExecuteFunction<Nullable<global::System.Decimal>>("LogCloseConnection", ip_addressParameter, client_idParameter, device_idParameter);
+        }
 
         #endregion
     }
@@ -590,16 +672,14 @@ namespace NMEAServer
         /// <param name="activity_log_id">Initial value of the activity_log_id property.</param>
         /// <param name="activity_datetime">Initial value of the activity_datetime property.</param>
         /// <param name="accessed_by_ip_address">Initial value of the accessed_by_ip_address property.</param>
-        /// <param name="connection_start_datetime">Initial value of the connection_start_datetime property.</param>
-        /// <param name="connection_last_datetime">Initial value of the connection_last_datetime property.</param>
-        public static DBActivityLog CreateDBActivityLog(global::System.Int32 activity_log_id, global::System.DateTime activity_datetime, global::System.String accessed_by_ip_address, global::System.DateTime connection_start_datetime, global::System.DateTime connection_last_datetime)
+        /// <param name="connection_datetime">Initial value of the connection_datetime property.</param>
+        public static DBActivityLog CreateDBActivityLog(global::System.Int32 activity_log_id, global::System.DateTime activity_datetime, global::System.String accessed_by_ip_address, global::System.DateTime connection_datetime)
         {
             DBActivityLog dBActivityLog = new DBActivityLog();
             dBActivityLog.activity_log_id = activity_log_id;
             dBActivityLog.activity_datetime = activity_datetime;
             dBActivityLog.accessed_by_ip_address = accessed_by_ip_address;
-            dBActivityLog.connection_start_datetime = connection_start_datetime;
-            dBActivityLog.connection_last_datetime = connection_last_datetime;
+            dBActivityLog.connection_datetime = connection_datetime;
             return dBActivityLog;
         }
 
@@ -632,30 +712,6 @@ namespace NMEAServer
         private global::System.Int32 _activity_log_id;
         partial void Onactivity_log_idChanging(global::System.Int32 value);
         partial void Onactivity_log_idChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Int32> subscription_id
-        {
-            get
-            {
-                return _subscription_id;
-            }
-            set
-            {
-                Onsubscription_idChanging(value);
-                ReportPropertyChanging("subscription_id");
-                _subscription_id = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("subscription_id");
-                Onsubscription_idChanged();
-            }
-        }
-        private Nullable<global::System.Int32> _subscription_id;
-        partial void Onsubscription_idChanging(Nullable<global::System.Int32> value);
-        partial void Onsubscription_idChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
@@ -708,78 +764,6 @@ namespace NMEAServer
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.DateTime connection_start_datetime
-        {
-            get
-            {
-                return _connection_start_datetime;
-            }
-            set
-            {
-                Onconnection_start_datetimeChanging(value);
-                ReportPropertyChanging("connection_start_datetime");
-                _connection_start_datetime = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("connection_start_datetime");
-                Onconnection_start_datetimeChanged();
-            }
-        }
-        private global::System.DateTime _connection_start_datetime;
-        partial void Onconnection_start_datetimeChanging(global::System.DateTime value);
-        partial void Onconnection_start_datetimeChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.DateTime connection_last_datetime
-        {
-            get
-            {
-                return _connection_last_datetime;
-            }
-            set
-            {
-                Onconnection_last_datetimeChanging(value);
-                ReportPropertyChanging("connection_last_datetime");
-                _connection_last_datetime = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("connection_last_datetime");
-                Onconnection_last_datetimeChanged();
-            }
-        }
-        private global::System.DateTime _connection_last_datetime;
-        partial void Onconnection_last_datetimeChanging(global::System.DateTime value);
-        partial void Onconnection_last_datetimeChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Int32> nmea_feed_id
-        {
-            get
-            {
-                return _nmea_feed_id;
-            }
-            set
-            {
-                Onnmea_feed_idChanging(value);
-                ReportPropertyChanging("nmea_feed_id");
-                _nmea_feed_id = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("nmea_feed_id");
-                Onnmea_feed_idChanged();
-            }
-        }
-        private Nullable<global::System.Int32> _nmea_feed_id;
-        partial void Onnmea_feed_idChanging(Nullable<global::System.Int32> value);
-        partial void Onnmea_feed_idChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
         [DataMemberAttribute()]
         public Nullable<global::System.Int32> client_id
@@ -800,6 +784,78 @@ namespace NMEAServer
         private Nullable<global::System.Int32> _client_id;
         partial void Onclient_idChanging(Nullable<global::System.Int32> value);
         partial void Onclient_idChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String device_id
+        {
+            get
+            {
+                return _device_id;
+            }
+            set
+            {
+                Ondevice_idChanging(value);
+                ReportPropertyChanging("device_id");
+                _device_id = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("device_id");
+                Ondevice_idChanged();
+            }
+        }
+        private global::System.String _device_id;
+        partial void Ondevice_idChanging(global::System.String value);
+        partial void Ondevice_idChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime connection_datetime
+        {
+            get
+            {
+                return _connection_datetime;
+            }
+            set
+            {
+                Onconnection_datetimeChanging(value);
+                ReportPropertyChanging("connection_datetime");
+                _connection_datetime = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("connection_datetime");
+                Onconnection_datetimeChanged();
+            }
+        }
+        private global::System.DateTime _connection_datetime;
+        partial void Onconnection_datetimeChanging(global::System.DateTime value);
+        partial void Onconnection_datetimeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String action
+        {
+            get
+            {
+                return _action;
+            }
+            set
+            {
+                OnactionChanging(value);
+                ReportPropertyChanging("action");
+                _action = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("action");
+                OnactionChanged();
+            }
+        }
+        private global::System.String _action;
+        partial void OnactionChanging(global::System.String value);
+        partial void OnactionChanged();
 
         #endregion
     
@@ -1966,30 +2022,6 @@ namespace NMEAServer
         /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
         [DataMemberAttribute()]
-        public Nullable<global::System.Int32> subscription_id
-        {
-            get
-            {
-                return _subscription_id;
-            }
-            set
-            {
-                Onsubscription_idChanging(value);
-                ReportPropertyChanging("subscription_id");
-                _subscription_id = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("subscription_id");
-                Onsubscription_idChanged();
-            }
-        }
-        private Nullable<global::System.Int32> _subscription_id;
-        partial void Onsubscription_idChanging(Nullable<global::System.Int32> value);
-        partial void Onsubscription_idChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
         public Nullable<global::System.Int32> client_id
         {
             get
@@ -2008,6 +2040,30 @@ namespace NMEAServer
         private Nullable<global::System.Int32> _client_id;
         partial void Onclient_idChanging(Nullable<global::System.Int32> value);
         partial void Onclient_idChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String device_id
+        {
+            get
+            {
+                return _device_id;
+            }
+            set
+            {
+                Ondevice_idChanging(value);
+                ReportPropertyChanging("device_id");
+                _device_id = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("device_id");
+                Ondevice_idChanged();
+            }
+        }
+        private global::System.String _device_id;
+        partial void Ondevice_idChanging(global::System.String value);
+        partial void Ondevice_idChanged();
 
         #endregion
     

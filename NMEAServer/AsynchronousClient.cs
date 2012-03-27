@@ -19,6 +19,7 @@ namespace NMEAServer
         public Socket ClientSocket = null;
         public string DeviceID = "";
         public int ClientID = 0;
+        public string AccessIP = "";
         public const int BufferSize = 1024;
         public byte[] buffer = new byte[BufferSize];
         public StringBuilder sb = new StringBuilder();
@@ -34,8 +35,25 @@ namespace NMEAServer
         {
             ClientSocket = socket;
 
-            _thread = new Thread(() => Start());
-            _thread.Start();
+            try
+            {
+                _thread = new Thread(() => Start());
+                _thread.Start();
+            }
+            catch (Exception ex)
+            {
+                m_MarineExchangeDB.LogError(ex.Message, 
+                                            ex.StackTrace, 
+                                            "AsynchronousClient.Contructor(Socket)", 
+                                            ex.InnerException.ToString(), 
+                                            ex.TargetSite.ToString(), 
+                                            DateTime.Now, 
+                                            null, 
+                                            null, 
+                                            "");
+
+                _thread = null;
+            }
         }
 
         public void Start()
@@ -51,49 +69,118 @@ namespace NMEAServer
             if (IPAddress.TryParse(((IPEndPoint)this.ClientSocket.RemoteEndPoint).Address.ToString(), out remoteIP))
             {
                 // query the database for a client who has authorized this IP address
-                System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByIP(remoteIP.ToString());
-
-                if (hasClient != null)
+                try
                 {
-                    foreach (int clientID in hasClient)
-                    {
-                        isAuthorized = true;
-                        ClientID = clientID;
-                        DeviceID = "";
+                    System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByIP(remoteIP.ToString());
 
-                        break;
+                    if (hasClient != null)
+                    {
+                        foreach (int clientID in hasClient)
+                        {
+                            isAuthorized = true;
+                            ClientID = clientID;
+                            DeviceID = "";
+
+                            break;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    m_MarineExchangeDB.LogError(ex.Message, 
+                                                ex.StackTrace, 
+                                                "AsynchronousClient.Start", 
+                                                ex.InnerException.ToString(), 
+                                                ex.TargetSite.ToString(), 
+                                                DateTime.Now, 
+                                                null, 
+                                                ClientID, 
+                                                DeviceID);
+
+                    // reset the Client and Device IDs
+                    ClientID = 0;
+                    DeviceID = "";
                 }
             }
 
+            // if the client's IP address is not authorized, accept data from client
+            // if this is an authorized client (iDevice - iPhone, iPad, etc), it'll send a 40 character string with it's identifier
             if (!isAuthorized)
             {
                 this.sendDone.Reset();
 
                 // call client's method to BeginReceive
-                this.ClientSocket.BeginReceive(this.buffer, 0, 1024, 0, new AsyncCallback(ServerReceiveCallback), this);
+                try
+                {
+                    this.ClientSocket.BeginReceive(this.buffer, 0, 1024, 0, new AsyncCallback(ServerReceiveCallback), this);
+                }
+                catch (Exception ex)
+                {
+                    m_MarineExchangeDB.LogError(ex.Message,
+                            ex.StackTrace,
+                            "AsynchronousClient.Start",
+                            ex.InnerException.ToString(),
+                            ex.TargetSite.ToString(),
+                            DateTime.Now,
+                            null,
+                            ClientID,
+                            DeviceID);
+
+                    // response to any socket error is to close the socket and abort
+                    this.ClientSocket.Close();
+                    ClientID = 0;
+                    DeviceID = "";
+                }
+
                 this.sendDone.WaitOne();
             }
+
+            // log this connection, whether authorized or not - if a socket error occurs in BeginReceive, the client will not show up here
+            AccessIP = remoteIP != null ? remoteIP.ToString() : "";
+            m_MarineExchangeDB.LogOpenConnection(AccessIP, ClientID, DeviceID);
 
             // once the client has identified itself, begin sending data
             if (ClientID > 0)
             {
+                FeedSubscriptions = new List<int>();
+
                 // check client's subscriptions
-                System.Data.Objects.ObjectResult<CheckUser_Result> clientSubscriptions = m_MarineExchangeDB.FetchClientSubscriptions(ClientID);
-
-                if (clientSubscriptions != null)
+                try
                 {
-                    FeedSubscriptions = new List<int>();
+                    System.Data.Objects.ObjectResult<CheckUser_Result> clientSubscriptions = m_MarineExchangeDB.FetchClientSubscriptions(ClientID);
 
-                    foreach (CheckUser_Result subscription in clientSubscriptions)
+                    if (clientSubscriptions != null)
                     {
-                        FeedSubscriptions.Add(subscription.nmea_feed_id);
+                        foreach (CheckUser_Result subscription in clientSubscriptions)
+                        {
+                            FeedSubscriptions.Add(subscription.nmea_feed_id);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    m_MarineExchangeDB.LogError(ex.Message,
+                                                ex.StackTrace,
+                                                "AsynchronousClient.Start",
+                                                ex.InnerException.ToString(),
+                                                ex.TargetSite.ToString(),
+                                                DateTime.Now,
+                                                null,
+                                                ClientID,
+                                                DeviceID);
                 }
 
                 while (this.ClientSocket.Connected)
                 {
-                    ServerSend(this);
+                    if (FeedSubscriptions.Count <= 0)
+                    {
+                        // disconnect clients with no feeds
+                        this.ClientSocket.Close();
+                        m_MarineExchangeDB.LogCloseConnection(AccessIP, ClientID, DeviceID);
+                        break;
+                    }
+                    else
+                        ServerSend(this);
                 }
             }
         }
@@ -104,33 +191,132 @@ namespace NMEAServer
             AsynchronousClient client = (AsynchronousClient)ar.AsyncState;
             Socket handler = client.ClientSocket;
 
-            int bytesRead = handler.EndReceive(ar);
+            int bytesRead = 0;
+
+            try
+            {
+                bytesRead = handler.EndReceive(ar);
+            }
+            catch (Exception ex)
+            {
+                // response to any socket error, or socket method error is to close the connection
+                handler.Close();
+
+                m_MarineExchangeDB.LogError(ex.Message,
+                                            ex.StackTrace,
+                                            "AsynchronousClient.Start",
+                                            ex.InnerException.ToString(),
+                                            ex.TargetSite.ToString(),
+                                            DateTime.Now,
+                                            null,
+                                            ClientID,
+                                            DeviceID);
+
+                ClientID = 0;
+                DeviceID = "";
+                bytesRead = 0;
+                client.sb.Clear();
+            }
 
             if (bytesRead < 40)
             {
-                client.sb.Append(Encoding.ASCII.GetString(client.buffer, 0, bytesRead));
+                try
+                {
+                    client.sb.Append(Encoding.ASCII.GetString(client.buffer, 0, bytesRead));
+                }
+                catch (Exception ex)
+                {
+                    // not a fatal error, just log and continue on. if it was fatal, the client won't be identified and the connection will die
+                    m_MarineExchangeDB.LogError(ex.Message,
+                                                ex.StackTrace,
+                                                "AsynchronousClient.Start",
+                                                ex.InnerException.ToString(),
+                                                ex.TargetSite.ToString(),
+                                                DateTime.Now,
+                                                null,
+                                                ClientID,
+                                                DeviceID);
+                }
 
-                // not all the data was received. get more
-                handler.BeginReceive(client.buffer, 0, 1024, 0, new AsyncCallback(ServerReceiveCallback), client);
+                try
+                {
+                    // not all the data was received. get more
+                    handler.BeginReceive(client.buffer, 0, 1024, 0, new AsyncCallback(ServerReceiveCallback), client);
+                }
+                catch (Exception ex)
+                {
+                    // response to any socket error, or socket method error is to close the connection
+                    handler.Close();
+
+                    m_MarineExchangeDB.LogError(ex.Message,
+                                                ex.StackTrace,
+                                                "AsynchronousClient.Start",
+                                                ex.InnerException.ToString(),
+                                                ex.TargetSite.ToString(),
+                                                DateTime.Now,
+                                                null,
+                                                ClientID,
+                                                DeviceID);
+
+                    m_MarineExchangeDB.LogCloseConnection(AccessIP, ClientID, DeviceID);
+
+                    ClientID = 0;
+                    DeviceID = "";
+                    bytesRead = 0;
+                    client.sb.Clear();
+                }
             }
             else
             {
                 // all data was received
-                client.sb.Append(Encoding.ASCII.GetString(client.buffer, 0, bytesRead));
+                try
+                {
+                    client.sb.Append(Encoding.ASCII.GetString(client.buffer, 0, bytesRead));
+                }
+                catch (Exception ex)
+                {
+                    // not a fatal error, just log and continue on. if it was fatal, the client won't be identified and the connection will die
+                    m_MarineExchangeDB.LogError(ex.Message,
+                            ex.StackTrace,
+                            "AsynchronousClient.Start",
+                            ex.InnerException.ToString(),
+                            ex.TargetSite.ToString(),
+                            DateTime.Now,
+                            null,
+                            ClientID,
+                            DeviceID);
+                }
 
-                Console.WriteLine("Client with identifier '" + client.sb.ToString() + "' connected");
                 client.DeviceID = client.sb.ToString();
 
-                System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByDevice(client.DeviceID);
-                if (hasClient != null)
+                try
                 {
-                    foreach (int clientID in hasClient)
+                    System.Data.Objects.ObjectResult<int?> hasClient = m_MarineExchangeDB.CheckUserByDevice(client.DeviceID);
+                    if (hasClient != null)
                     {
-                        ClientID = clientID;
-                        DeviceID = client.DeviceID;
+                        foreach (int clientID in hasClient)
+                        {
+                            ClientID = clientID;
+                            DeviceID = client.DeviceID;
 
-                        break;
+                            break;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    m_MarineExchangeDB.LogError(ex.Message,
+                                                ex.StackTrace,
+                                                "AsynchronousClient.Start",
+                                                ex.InnerException.ToString(),
+                                                ex.TargetSite.ToString(),
+                                                DateTime.Now,
+                                                null,
+                                                ClientID,
+                                                DeviceID);
+
+                    ClientID = 0;
+                    DeviceID = "";
                 }
 
                 client.sendDone.Set();
@@ -155,10 +341,22 @@ namespace NMEAServer
                 {
                     handler.BeginSend(data, 0, data.Length, 0, new AsyncCallback(ServerSendCallback), client);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    client.ClientSocket.Close();
-                    client.ClientSocket.Dispose();
+                    // response to any socket errors is to close the connection
+                    handler.Close();
+
+                    m_MarineExchangeDB.LogError(ex.Message,
+                            ex.StackTrace,
+                            "AsynchronousClient.Start",
+                            ex.InnerException.ToString(),
+                            ex.TargetSite.ToString(),
+                            DateTime.Now,
+                            null,
+                            ClientID,
+                            DeviceID);
+
+                    m_MarineExchangeDB.LogCloseConnection(AccessIP, ClientID, DeviceID);
                 }
             }
         }
@@ -166,16 +364,29 @@ namespace NMEAServer
         // completes sending data to the client
         private void ServerSendCallback(IAsyncResult ar)
         {
+            AsynchronousClient client = (AsynchronousClient)ar.AsyncState;
+            Socket handler = client.ClientSocket;
+
             try
             {
-                AsynchronousClient client = (AsynchronousClient)ar.AsyncState;
-                Socket handler = client.ClientSocket;
-
                 int bytesSent = handler.EndSend(ar);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.ToString());
+                // response to any socket errors is to close the connection
+                handler.Close();
+
+                m_MarineExchangeDB.LogError(ex.Message,
+                        ex.StackTrace,
+                        "AsynchronousClient.Start",
+                        ex.InnerException.ToString(),
+                        ex.TargetSite.ToString(),
+                        DateTime.Now,
+                        null,
+                        ClientID,
+                        DeviceID);
+
+                m_MarineExchangeDB.LogCloseConnection(AccessIP, ClientID, DeviceID);
             }
         }
     }

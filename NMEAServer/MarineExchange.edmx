@@ -41,13 +41,12 @@
             <PropertyRef Name="activity_log_id" />
           </Key>
           <Property Name="activity_log_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="subscription_id" Type="int" />
           <Property Name="activity_datetime" Type="datetime" Nullable="false" />
           <Property Name="accessed_by_ip_address" Type="varchar" Nullable="false" MaxLength="15" />
-          <Property Name="connection_start_datetime" Type="datetime" Nullable="false" />
-          <Property Name="connection_last_datetime" Type="datetime" Nullable="false" />
-          <Property Name="nmea_feed_id" Type="int" />
+          <Property Name="connection_datetime" Type="datetime" Nullable="false" />
           <Property Name="client_id" Type="int" />
+          <Property Name="device_id" Type="varchar" MaxLength="40" />
+          <Property Name="action" Type="varchar" MaxLength="5" />
         </EntityType>
         <EntityType Name="Client">
           <Key>
@@ -109,8 +108,8 @@
           <Property Name="target_site" Type="varchar" MaxLength="1000" />
           <Property Name="error_datetime" Type="datetime" Nullable="false" />
           <Property Name="nmea_feed_id" Type="int" />
-          <Property Name="subscription_id" Type="int" />
           <Property Name="client_id" Type="int" />
+          <Property Name="device_id" Type="varchar" MaxLength="40" />
         </EntityType>
         <EntityType Name="NMEA_Feeds">
           <Key>
@@ -250,10 +249,19 @@
           <Parameter Name="feedID" Type="int" Mode="In" />
         </Function>
         <Function Name="LogActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="subscription_id" Type="int" Mode="In" />
           <Parameter Name="ip_address" Type="varchar" Mode="In" />
-          <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
           <Parameter Name="client_id" Type="int" Mode="In" />
+          <Parameter Name="device_id" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="LogClose" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ip_address" Type="varchar" Mode="In" />
+          <Parameter Name="client_id" Type="int" Mode="In" />
+          <Parameter Name="device_id" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="LogConnect" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ip_address" Type="varchar" Mode="In" />
+          <Parameter Name="client_id" Type="int" Mode="In" />
+          <Parameter Name="device_id" Type="varchar" Mode="In" />
         </Function>
         <Function Name="LogError" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="error_description" Type="varchar" Mode="In" />
@@ -263,6 +271,7 @@
           <Parameter Name="target_site" Type="varchar" Mode="In" />
           <Parameter Name="error_datetime" Type="datetime" Mode="In" />
           <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
+          <Parameter Name="client_id" Type="int" Mode="In" />
           <Parameter Name="device_id" Type="varchar" Mode="In" />
         </Function>
         <Function Name="UpdateLogActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
@@ -356,10 +365,9 @@
             <Parameter Name="feedID" Mode="In" Type="Int32" />
           </FunctionImport>
           <FunctionImport Name="LogActivity" ReturnType="Collection(Decimal)">
-            <Parameter Name="subscription_id" Mode="In" Type="Int32" />
             <Parameter Name="ip_address" Mode="In" Type="String" />
-            <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
             <Parameter Name="client_id" Mode="In" Type="Int32" />
+            <Parameter Name="device_id" Mode="In" Type="String" />
           </FunctionImport>
           <FunctionImport Name="LogError">
             <Parameter Name="error_description" Mode="In" Type="String" />
@@ -369,13 +377,24 @@
             <Parameter Name="target_site" Mode="In" Type="String" />
             <Parameter Name="error_datetime" Mode="In" Type="DateTime" />
             <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
+            <Parameter Name="client_id" Mode="In" Type="Int32" />
             <Parameter Name="device_id" Mode="In" Type="String" />
           </FunctionImport>
           <FunctionImport Name="CheckUserByDevice" ReturnType="Collection(Int32)">
           <Parameter Name="DeviceID" Mode="In" Type="String" />
           </FunctionImport>
           <FunctionImport Name="FetchClientSubscriptions" ReturnType="Collection(MarineExchangeModel.CheckUser_Result)">
-            <Parameter Name="clientID" Mode="In" Type="Int32" />
+          <Parameter Name="clientID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="LogOpenConnection" ReturnType="Collection(Decimal)">
+            <Parameter Name="ip_address" Mode="In" Type="String" />
+            <Parameter Name="client_id" Mode="In" Type="Int32" />
+            <Parameter Name="device_id" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="LogCloseConnection" ReturnType="Collection(Decimal)">
+            <Parameter Name="ip_address" Mode="In" Type="String" />
+            <Parameter Name="client_id" Mode="In" Type="Int32" />
+            <Parameter Name="device_id" Mode="In" Type="String" />
           </FunctionImport>
         </EntityContainer>
         <EntityType Name="DBActivityLog">
@@ -383,13 +402,12 @@
             <PropertyRef Name="activity_log_id" />
           </Key>
           <Property Name="activity_log_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="subscription_id" Type="Int32" />
           <Property Name="activity_datetime" Type="DateTime" Nullable="false" />
           <Property Name="accessed_by_ip_address" Type="String" Nullable="false" MaxLength="15" Unicode="false" FixedLength="false" />
-          <Property Name="connection_start_datetime" Type="DateTime" Nullable="false" />
-          <Property Name="connection_last_datetime" Type="DateTime" Nullable="false" />
-          <Property Name="nmea_feed_id" Type="Int32" />
           <Property Name="client_id" Type="Int32" />
+          <Property Type="String" Name="device_id" MaxLength="40" FixedLength="false" Unicode="false" />
+          <Property Type="DateTime" Name="connection_datetime" Nullable="false" />
+          <Property Type="String" Name="action" MaxLength="5" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="DBClient">
           <Key>
@@ -457,8 +475,8 @@
           <Property Name="target_site" Type="String" MaxLength="1000" Unicode="false" FixedLength="false" />
           <Property Name="error_datetime" Type="DateTime" Nullable="false" />
           <Property Name="nmea_feed_id" Type="Int32" />
-          <Property Name="subscription_id" Type="Int32" />
           <Property Name="client_id" Type="Int32" />
+          <Property Type="String" Name="device_id" MaxLength="40" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="DBNMEAFeeds">
           <Key>
@@ -571,13 +589,12 @@
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="MarineExchangeModelStoreContainer" CdmEntityContainer="MarineExchangeEntities">
           <EntitySetMapping Name="DBActivityLogs"><EntityTypeMapping TypeName="MarineExchangeModel.DBActivityLog"><MappingFragment StoreEntitySet="Activity_Log">
-            <ScalarProperty Name="activity_log_id" ColumnName="activity_log_id" />
-            <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
+            <ScalarProperty Name="action" ColumnName="action" />
+                <ScalarProperty Name="connection_datetime" ColumnName="connection_datetime" />
+                <ScalarProperty Name="device_id" ColumnName="device_id" />
+                <ScalarProperty Name="activity_log_id" ColumnName="activity_log_id" />
             <ScalarProperty Name="activity_datetime" ColumnName="activity_datetime" />
             <ScalarProperty Name="accessed_by_ip_address" ColumnName="accessed_by_ip_address" />
-            <ScalarProperty Name="connection_start_datetime" ColumnName="connection_start_datetime" />
-            <ScalarProperty Name="connection_last_datetime" ColumnName="connection_last_datetime" />
-            <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
             <ScalarProperty Name="client_id" ColumnName="client_id" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
           <EntitySetMapping Name="DBClients"><EntityTypeMapping TypeName="MarineExchangeModel.DBClient"><MappingFragment StoreEntitySet="Client">
@@ -614,7 +631,8 @@
             <ScalarProperty Name="device_description" ColumnName="device_description" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
           <EntitySetMapping Name="DBErrorLogs"><EntityTypeMapping TypeName="MarineExchangeModel.DBErrorLog"><MappingFragment StoreEntitySet="Error_Log">
-            <ScalarProperty Name="error_log_id" ColumnName="error_log_id" />
+            <ScalarProperty Name="device_id" ColumnName="device_id" />
+                <ScalarProperty Name="error_log_id" ColumnName="error_log_id" />
             <ScalarProperty Name="error_description" ColumnName="error_description" />
             <ScalarProperty Name="stack_trace" ColumnName="stack_trace" />
             <ScalarProperty Name="error_thrown_from" ColumnName="error_thrown_from" />
@@ -622,7 +640,6 @@
             <ScalarProperty Name="target_site" ColumnName="target_site" />
             <ScalarProperty Name="error_datetime" ColumnName="error_datetime" />
             <ScalarProperty Name="nmea_feed_id" ColumnName="nmea_feed_id" />
-            <ScalarProperty Name="subscription_id" ColumnName="subscription_id" />
             <ScalarProperty Name="client_id" ColumnName="client_id" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
           <EntitySetMapping Name="DBNMEAFeeds"><EntityTypeMapping TypeName="MarineExchangeModel.DBNMEAFeeds"><MappingFragment StoreEntitySet="NMEA_Feeds">
@@ -659,8 +676,6 @@
             </ResultMapping>
           </FunctionImportMapping>
           <FunctionImportMapping FunctionImportName="HasSubscription" FunctionName="MarineExchangeModel.Store.HasSubscription" />
-          <FunctionImportMapping FunctionImportName="LogActivity" FunctionName="MarineExchangeModel.Store.LogActivity" />
-          <FunctionImportMapping FunctionImportName="LogError" FunctionName="MarineExchangeModel.Store.LogError" />
           <FunctionImportMapping FunctionImportName="CheckUserByDevice" FunctionName="MarineExchangeModel.Store.CheckUserByDevice" />
           <FunctionImportMapping FunctionImportName="FetchClientSubscriptions" FunctionName="MarineExchangeModel.Store.CheckUser">
             <ResultMapping>
@@ -673,6 +688,10 @@
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="LogActivity" FunctionName="MarineExchangeModel.Store.LogActivity" />
+          <FunctionImportMapping FunctionImportName="LogError" FunctionName="MarineExchangeModel.Store.LogError" />
+          <FunctionImportMapping FunctionImportName="LogOpenConnection" FunctionName="MarineExchangeModel.Store.LogConnect" />
+          <FunctionImportMapping FunctionImportName="LogCloseConnection" FunctionName="MarineExchangeModel.Store.LogClose" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
@@ -694,13 +713,13 @@
     <!-- Diagram content (shape and connector positions) -->
     <Diagrams>
       <Diagram Name="MarineExchange">
-        <EntityTypeShape EntityType="MarineExchangeModel.DBActivityLog" Width="1.5" PointX="5.75" PointY="0.75" Height="2.5571907552083335" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarineExchangeModel.DBActivityLog" Width="1.5" PointX="5.75" PointY="0.75" Height="2.3648893229166665" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBClient" Width="1.5" PointX="0.75" PointY="4.5" Height="2.3648893229166674" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBClientAddresses" Width="1.5" PointX="3" PointY="2.875" Height="2.7494921874999996" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBClientAuthentication" Width="1.5" PointX="3" PointY="6.375" Height="1.9802864583333326" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBCurrentConnection" Width="1.5" PointX="8.25" PointY="4.625" Height="2.1725878906249996" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBDeviceType" Width="1.5" PointX="0.75" PointY="0.75" Height="1.4033821614583326" IsExpanded="true" />
-        <EntityTypeShape EntityType="MarineExchangeModel.DBErrorLog" Width="1.5" PointX="5.75" PointY="7.75" Height="2.9417936197916674" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarineExchangeModel.DBErrorLog" Width="1.5" PointX="5.75" PointY="7.75" Height="2.9417936197916656" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBNMEAFeeds" Width="1.5" PointX="3.75" PointY="11" Height="3.3263964843749996" IsExpanded="true" />
         <EntityTypeShape EntityType="MarineExchangeModel.DBSubscription" Width="1.5" PointX="6" PointY="4.375" Height="2.5571907552083317" IsExpanded="true" />
         <AssociationConnector Association="MarineExchangeModel.FK_Client_Addresses_Client" ManuallyRouted="false">

@@ -36,13 +36,12 @@
       <PropertyRef Name="activity_log_id" />
     </Key>
     <Property Name="activity_log_id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-    <Property Name="subscription_id" Type="int" />
     <Property Name="activity_datetime" Type="datetime" Nullable="false" />
     <Property Name="accessed_by_ip_address" Type="varchar" Nullable="false" MaxLength="15" />
-    <Property Name="connection_start_datetime" Type="datetime" Nullable="false" />
-    <Property Name="connection_last_datetime" Type="datetime" Nullable="false" />
-    <Property Name="nmea_feed_id" Type="int" />
+    <Property Name="connection_datetime" Type="datetime" Nullable="false" />
     <Property Name="client_id" Type="int" />
+    <Property Name="device_id" Type="varchar" MaxLength="40" />
+    <Property Name="action" Type="varchar" MaxLength="5" />
   </EntityType>
   <EntityType Name="Client">
     <Key>
@@ -104,8 +103,8 @@
     <Property Name="target_site" Type="varchar" MaxLength="1000" />
     <Property Name="error_datetime" Type="datetime" Nullable="false" />
     <Property Name="nmea_feed_id" Type="int" />
-    <Property Name="subscription_id" Type="int" />
     <Property Name="client_id" Type="int" />
+    <Property Name="device_id" Type="varchar" MaxLength="40" />
   </EntityType>
   <EntityType Name="NMEA_Feeds">
     <Key>
@@ -245,10 +244,19 @@
     <Parameter Name="feedID" Type="int" Mode="In" />
   </Function>
   <Function Name="LogActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-    <Parameter Name="subscription_id" Type="int" Mode="In" />
     <Parameter Name="ip_address" Type="varchar" Mode="In" />
-    <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
     <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="device_id" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="LogClose" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ip_address" Type="varchar" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="device_id" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="LogConnect" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ip_address" Type="varchar" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
+    <Parameter Name="device_id" Type="varchar" Mode="In" />
   </Function>
   <Function Name="LogError" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
     <Parameter Name="error_description" Type="varchar" Mode="In" />
@@ -258,6 +266,7 @@
     <Parameter Name="target_site" Type="varchar" Mode="In" />
     <Parameter Name="error_datetime" Type="datetime" Mode="In" />
     <Parameter Name="nmea_feed_id" Type="int" Mode="In" />
+    <Parameter Name="client_id" Type="int" Mode="In" />
     <Parameter Name="device_id" Type="varchar" Mode="In" />
   </Function>
   <Function Name="UpdateLogActivity" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">

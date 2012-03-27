@@ -42,10 +42,9 @@
       <Parameter Name="feedID" Mode="In" Type="Int32" />
     </FunctionImport>
     <FunctionImport Name="LogActivity" ReturnType="Collection(Decimal)">
-      <Parameter Name="subscription_id" Mode="In" Type="Int32" />
       <Parameter Name="ip_address" Mode="In" Type="String" />
-      <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
       <Parameter Name="client_id" Mode="In" Type="Int32" />
+      <Parameter Name="device_id" Mode="In" Type="String" />
     </FunctionImport>
     <FunctionImport Name="LogError">
       <Parameter Name="error_description" Mode="In" Type="String" />
@@ -55,6 +54,7 @@
       <Parameter Name="target_site" Mode="In" Type="String" />
       <Parameter Name="error_datetime" Mode="In" Type="DateTime" />
       <Parameter Name="nmea_feed_id" Mode="In" Type="Int32" />
+      <Parameter Name="client_id" Mode="In" Type="Int32" />
       <Parameter Name="device_id" Mode="In" Type="String" />
     </FunctionImport>
     <FunctionImport Name="CheckUserByDevice" ReturnType="Collection(Int32)">
@@ -63,19 +63,28 @@
     <FunctionImport Name="FetchClientSubscriptions" ReturnType="Collection(MarineExchangeModel.CheckUser_Result)">
       <Parameter Name="clientID" Mode="In" Type="Int32" />
     </FunctionImport>
+    <FunctionImport Name="LogOpenConnection" ReturnType="Collection(Decimal)">
+      <Parameter Name="ip_address" Mode="In" Type="String" />
+      <Parameter Name="client_id" Mode="In" Type="Int32" />
+      <Parameter Name="device_id" Mode="In" Type="String" />
+    </FunctionImport>
+    <FunctionImport Name="LogCloseConnection" ReturnType="Collection(Decimal)">
+      <Parameter Name="ip_address" Mode="In" Type="String" />
+      <Parameter Name="client_id" Mode="In" Type="Int32" />
+      <Parameter Name="device_id" Mode="In" Type="String" />
+    </FunctionImport>
   </EntityContainer>
   <EntityType Name="DBActivityLog">
     <Key>
       <PropertyRef Name="activity_log_id" />
     </Key>
     <Property Name="activity_log_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-    <Property Name="subscription_id" Type="Int32" />
     <Property Name="activity_datetime" Type="DateTime" Nullable="false" />
     <Property Name="accessed_by_ip_address" Type="String" Nullable="false" MaxLength="15" Unicode="false" FixedLength="false" />
-    <Property Name="connection_start_datetime" Type="DateTime" Nullable="false" />
-    <Property Name="connection_last_datetime" Type="DateTime" Nullable="false" />
-    <Property Name="nmea_feed_id" Type="Int32" />
     <Property Name="client_id" Type="Int32" />
+    <Property Type="String" Name="device_id" MaxLength="40" FixedLength="false" Unicode="false" />
+    <Property Type="DateTime" Name="connection_datetime" Nullable="false" />
+    <Property Type="String" Name="action" MaxLength="5" FixedLength="false" Unicode="false" />
   </EntityType>
   <EntityType Name="DBClient">
     <Key>
@@ -143,8 +152,8 @@
     <Property Name="target_site" Type="String" MaxLength="1000" Unicode="false" FixedLength="false" />
     <Property Name="error_datetime" Type="DateTime" Nullable="false" />
     <Property Name="nmea_feed_id" Type="Int32" />
-    <Property Name="subscription_id" Type="Int32" />
     <Property Name="client_id" Type="Int32" />
+    <Property Type="String" Name="device_id" MaxLength="40" FixedLength="false" Unicode="false" />
   </EntityType>
   <EntityType Name="DBNMEAFeeds">
     <Key>

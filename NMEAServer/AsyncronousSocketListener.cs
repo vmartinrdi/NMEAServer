@@ -111,45 +111,104 @@ namespace NMEAServer
                     listener.Bind(localEndPoint);
                     listener.Listen(100);
 
-                    while (true)
+                    // will continue to run as long as the thread which is transferring
+                    while (transferBufferThread.IsAlive && _feeds.Count > 0) 
                     {
                         // reset _addDone - will be set again in BeginAccept
                         _allDone.Reset();
 
                         Socket newSocket = null;
-                        EntireConnection newConnection = (EntireConnection)listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), new EntireConnection { serverSocket = listener, clientSocket = newSocket }).AsyncState;
+
+                        EntireConnection newConnection;
+                        try
+                        {
+                            newConnection = (EntireConnection)listener.BeginAccept(new AsyncCallback(ServerAcceptCallback), new EntireConnection { serverSocket = listener, clientSocket = newSocket }).AsyncState;
+                        }
+                        catch (Exception ex)
+                        {
+                            m_MarineExchangeDB.LogError(ex.Message,
+                                                        ex.StackTrace,
+                                                        "AsynchronousSocketListener.StartListening",
+                                                        ex.InnerException.ToString(),
+                                                        ex.TargetSite.ToString(),
+                                                        DateTime.Now,
+                                                        null,
+                                                        null,
+                                                        null);
+
+                            newConnection = null;
+                        }
 
                         // wait till accept is complete
                         _allDone.WaitOne();
 
-                        // create new client - client has own thread which starts processing
-                        AsynchronousClient newClient = new AsynchronousClient(newConnection.clientSocket);
-                        _clients.Add(newClient);
+                        if (newConnection != null)
+                        {
+                            try
+                            {
+                                // create new client - client has own thread which starts processing
+                                AsynchronousClient newClient = new AsynchronousClient(newConnection.clientSocket);
+                                _clients.Add(newClient);
+                            }
+                            catch (Exception ex)
+                            {
+                                m_MarineExchangeDB.LogError(ex.Message,
+                                                            ex.StackTrace,
+                                                            "AsynchronousSocketListener.StartListening",
+                                                            ex.InnerException.ToString(),
+                                                            ex.TargetSite.ToString(),
+                                                            DateTime.Now,
+                                                            null,
+                                                            null,
+                                                            null);
+                            }
+                        }
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("ERROR: " + e.ToString());
+                    m_MarineExchangeDB.LogError(ex.Message,
+                                                ex.StackTrace,
+                                                "AsynchronousSocketListener.StartListening",
+                                                ex.InnerException.ToString(),
+                                                ex.TargetSite.ToString(),
+                                                DateTime.Now,
+                                                null,
+                                                null,
+                                                null);
                 }
             }
         }
 
         private void CheckFeedBuffer()
         {
-            while (true)
+            while (_feeds.Count > 0)
             {
                 foreach (NMEAFeed feed in _feeds)
                 {
-                    lock (feed.sb)
-                    {
-                        // look up the feed ID in the Feed Buffer dictionary
-                        if (_feedBuffers.ContainsKey(feed.FeedID))
-                        {
-                            _feedBuffers[feed.FeedID] = feed.sb.ToString();
-                        }
+                    //if (feed.IsConnected)
+                    //{
 
-                        feed.sb.Clear();
-                    }
+                        lock (feed.sb)
+                        {
+                            // look up the feed ID in the Feed Buffer dictionary
+                            if (_feedBuffers.ContainsKey(feed.FeedID))
+                            {
+                                _feedBuffers[feed.FeedID] = feed.sb.ToString();
+                            }
+
+                            feed.sb.Clear();
+                        }
+                    //}
+                    //else
+                    //{
+                    //    if (_feedBuffers.ContainsKey(feed.FeedID))
+                    //    {
+                    //        _feedBuffers.Remove(feed.FeedID);
+                    //    }
+
+                    //    _feeds.Remove(feed);
+                    //}
                 }
 
                 // write localBuffer to each connected client (so client is not sent duplicate data) (once this is implemented, won't need to lock localBuffer)
@@ -189,11 +248,26 @@ namespace NMEAServer
             // retrieve the listener socket
             EntireConnection connection = (EntireConnection)ar.AsyncState;
 
-            //Socket listener = (Socket)ar.AsyncState;
             Socket listener = connection.serverSocket;
-            // retrieve the new socket created for this connect
-            Socket clientSocket = listener.EndAccept(ar);
-            connection.clientSocket = clientSocket;
+
+            try
+            {
+                // retrieve the new socket created for this connect
+                Socket clientSocket = listener.EndAccept(ar);
+                connection.clientSocket = clientSocket;
+            }
+            catch (Exception ex)
+            {
+                m_MarineExchangeDB.LogError(ex.Message,
+                                            ex.StackTrace,
+                                            "AsynchronousSocketListener.ServerAcceptCallback",
+                                            ex.InnerException.ToString(),
+                                            ex.TargetSite.ToString(),
+                                            DateTime.Now,
+                                            null,
+                                            null,
+                                            null);
+            }
         }
 
         class EntireConnection
